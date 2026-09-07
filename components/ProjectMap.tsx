@@ -36,6 +36,8 @@ export default function ProjectMap({
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
     map.current = m;
     return () => {
+      markers.current.forEach((mk) => mk.remove());
+      markers.current.clear();
       m.remove();
       map.current = null;
     };
