@@ -27,5 +27,5 @@ export const CATEGORY_LABELS: Record<PlaceCategory, string> = {
 export const CATEGORY_COLORS: Record<PlaceCategory, string> = {
   park: "#3f7d4e",
   "scenic-drive": "#b8862b",
-  "photo-spot": "#c4553a",
+  "photo-spot": "#7b5ca6", // plum; red is reserved for live wildfires
 };
