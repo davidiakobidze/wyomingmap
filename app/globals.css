@@ -192,7 +192,10 @@ a { color: var(--accent); }
 .detail .approx { font-size: 12px; color: var(--ink-3); }
 
 .mapwrap { position: relative; }
-.map { position: absolute; inset: 0; }
+/* Two selectors on purpose: maplibre-gl.css loads after this file and sets
+   `.maplibregl-map { position: relative }`, which at equal specificity beat the
+   old `.map` rule and collapsed the container to 0px tall. */
+.mapwrap > .map { position: absolute; inset: 0; width: 100%; height: 100%; }
 .map-toggle {
   position: absolute;
   top: 10px;
