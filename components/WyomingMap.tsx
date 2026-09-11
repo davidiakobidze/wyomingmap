@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { FeatureCollection } from "geojson";
+import { Bounds, WYOMING_BOUNDS } from "@/lib/site";
 
 export interface MapPoint {
   id: string;
@@ -25,16 +26,50 @@ export interface MapOverlay {
 }
 
 const STYLE = "https://tiles.openfreemap.org/styles/positron";
-const WYOMING_BOUNDS: [[number, number], [number, number]] = [
-  [-111.2, 40.9],
-  [-104.0, 45.1],
-];
 const DEFAULT_COLOR = "#2f5d8a";
+
+// Free USGS orthoimagery (NAIP-derived), web mercator, no key.
+const IMAGERY_ID = "usgs-imagery";
+const IMAGERY_TILES =
+  "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}";
+const IMAGERY_ATTRIBUTION = "USDA, USGS The National Map";
 
 const sourceId = (o: MapOverlay) => `overlay-${o.id}`;
 const layerIds = (o: MapOverlay) => ({ fill: `${sourceId(o)}-fill`, line: `${sourceId(o)}-line` });
 
+// Labels (symbol layers) stay on top of everything we add. Overlays go just
+// under the labels; imagery goes under the overlays too, so a satellite view
+// never hides a fire perimeter.
+const firstSymbolLayer = (m: maplibregl.Map) =>
+  m.getStyle().layers.find((l) => l.type === "symbol")?.id;
+const firstOverlayOrSymbolLayer = (m: maplibregl.Map) =>
+  m.getStyle().layers.find((l) => l.id.startsWith("overlay-") || l.type === "symbol")?.id;
+
+function applyImagery(m: maplibregl.Map, visible: boolean) {
+  if (!m.getSource(IMAGERY_ID)) {
+    m.addSource(IMAGERY_ID, {
+      type: "raster",
+      tiles: [IMAGERY_TILES],
+      tileSize: 256,
+      maxzoom: 16,
+      attribution: IMAGERY_ATTRIBUTION,
+    });
+    m.addLayer(
+      {
+        id: IMAGERY_ID,
+        type: "raster",
+        source: IMAGERY_ID,
+        layout: { visibility: visible ? "visible" : "none" },
+      },
+      firstOverlayOrSymbolLayer(m)
+    );
+  } else {
+    m.setLayoutProperty(IMAGERY_ID, "visibility", visible ? "visible" : "none");
+  }
+}
+
 function applyOverlays(m: maplibregl.Map, overlays: MapOverlay[], previous: Set<string>) {
+  const beforeId = firstSymbolLayer(m);
   const wanted = new Set(overlays.map(sourceId));
   previous.forEach((src) => {
     if (wanted.has(src)) return;
@@ -53,10 +88,10 @@ function applyOverlays(m: maplibregl.Map, overlays: MapOverlay[], previous: Set<
       previous.add(src);
     }
     if (o.fill && !m.getLayer(ids.fill)) {
-      m.addLayer({ id: ids.fill, type: "fill", source: src, paint: o.fill as never });
+      m.addLayer({ id: ids.fill, type: "fill", source: src, paint: o.fill as never }, beforeId);
     }
     if (o.line && !m.getLayer(ids.line)) {
-      m.addLayer({ id: ids.line, type: "line", source: src, paint: o.line as never });
+      m.addLayer({ id: ids.line, type: "line", source: src, paint: o.line as never }, beforeId);
     }
   });
 }
@@ -66,17 +101,22 @@ export default function WyomingMap({
   overlays = [],
   activeId = null,
   onSelect,
+  initialBounds = WYOMING_BOUNDS,
+  satellite = false,
 }: {
   points?: MapPoint[];
   overlays?: MapOverlay[];
   activeId?: string | null;
   onSelect?: (id: string) => void;
+  initialBounds?: Bounds;
+  satellite?: boolean;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const markers = useRef<Map<string, maplibregl.Marker>>(new Map());
   const overlaySources = useRef<Set<string>>(new Set());
   const overlaysRef = useRef<MapOverlay[]>(overlays);
+  const satelliteRef = useRef(satellite);
   const styleLoaded = useRef(false);
   const [unsupported, setUnsupported] = useState(false);
 
@@ -88,7 +128,7 @@ export default function WyomingMap({
       m = new maplibregl.Map({
         container: el,
         style: STYLE,
-        bounds: WYOMING_BOUNDS,
+        bounds: initialBounds,
         fitBoundsOptions: { padding: 30 },
         attributionControl: { compact: true },
       });
@@ -107,6 +147,7 @@ export default function WyomingMap({
     // that arrived before then is applied here.
     m.on("load", () => {
       styleLoaded.current = true;
+      applyImagery(m, satelliteRef.current);
       applyOverlays(m, overlaysRef.current, overlaySources.current);
     });
     map.current = m;
@@ -118,6 +159,8 @@ export default function WyomingMap({
       m.remove();
       map.current = null;
     };
+    // initialBounds is only the starting view; changing it later should not re-create the map.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -126,6 +169,13 @@ export default function WyomingMap({
     if (!m || !styleLoaded.current) return;
     applyOverlays(m, overlays, overlaySources.current);
   }, [overlays]);
+
+  useEffect(() => {
+    satelliteRef.current = satellite;
+    const m = map.current;
+    if (!m || !styleLoaded.current) return;
+    applyImagery(m, satellite);
+  }, [satellite]);
 
   useEffect(() => {
     const m = map.current;

@@ -10,6 +10,8 @@ import {
   Place,
   PlaceCategory,
 } from "@/lib/places";
+import { LANDING_PAGES } from "@/lib/pages";
+import { Bounds, SITE_NAME, TAGLINE } from "@/lib/site";
 import type { FireProps, FiresFeed } from "@/lib/live";
 import type { MapOverlay, MapPoint } from "./WyomingMap";
 
@@ -51,12 +53,46 @@ function fireSubtitle(p: FireProps) {
   return parts.join(" · ") || "Size not yet reported";
 }
 
-export default function Explorer({ places }: { places: Place[] }) {
-  const [categories, setCategories] = useState<Set<PlaceCategory>>(new Set(CATEGORY_ORDER));
+// Keep `?place=` in the address bar in sync with the selection so a visitor can
+// share exactly what they are looking at. Fires are transient and never go in the URL.
+function syncPlaceParam(slug: string | null) {
+  const url = new URL(window.location.href);
+  if (slug) url.searchParams.set("place", slug);
+  else url.searchParams.delete("place");
+  window.history.replaceState(null, "", url);
+}
+
+export interface ExplorerProps {
+  places: Place[];
+  currentSlug?: string; // landing page slug, or undefined for home
+  intro?: { h1: string; text: string };
+  initialCategories?: PlaceCategory[];
+  bounds?: Bounds;
+  firesDefault?: boolean;
+  firesFirst?: boolean;
+}
+
+export default function Explorer({
+  places,
+  currentSlug,
+  intro,
+  initialCategories = CATEGORY_ORDER,
+  bounds,
+  firesDefault = true,
+  firesFirst = true,
+}: ExplorerProps) {
+  const [categories, setCategories] = useState<Set<PlaceCategory>>(new Set(initialCategories));
   const [active, setActive] = useState<string | null>(null);
   const [fires, setFires] = useState<FiresFeed | null>(null);
-  const [firesOn, setFiresOn] = useState(true);
+  const [firesOn, setFiresOn] = useState(firesDefault);
+  const [satellite, setSatellite] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+
+  // Honor a shared link on first load.
+  useEffect(() => {
+    const slug = new URLSearchParams(window.location.search).get("place");
+    if (slug && places.some((p) => p.slug === slug)) setActive(slug);
+  }, [places]);
 
   useEffect(() => {
     let cancelled = false;
@@ -136,7 +172,26 @@ export default function Explorer({ places }: { places: Place[] }) {
       else next.add(c);
       return next;
     });
-  const onSelect = useCallback((id: string) => setActive(id), []);
+
+  const select = useCallback((id: string | null) => {
+    setActive(id);
+    syncPlaceParam(id && !id.startsWith("fire:") ? id : null);
+  }, []);
+
+  const fireRows = fireFeatures.map((f) => {
+    const id = fireId(f);
+    return (
+      <li key={id}>
+        <button className={"row" + (id === active ? " active" : "")} onClick={() => select(id)}>
+          <span className="dot" style={{ background: FIRE_COLOR }} />
+          <span>
+            <div className="name">{f.properties.name} fire</div>
+            <div className="sub">{fireSubtitle(f.properties)}</div>
+          </span>
+        </button>
+      </li>
+    );
+  });
 
   const fireStatus = (() => {
     if (!fires) return "checking…";
@@ -148,12 +203,29 @@ export default function Explorer({ places }: { places: Place[] }) {
   return (
     <div className="shell">
       <header className="topbar">
-        <a className="brand" href="/">Wyoming Map</a>
-        <span className="tagline">One view to understand Wyoming.</span>
+        <a className="brand" href="/">{SITE_NAME}</a>
+        <span className="tagline">{TAGLINE}</span>
         <span className="count">{visible.length} of {places.length} places</span>
+        <a className="sponsor" href="/feature-your-business">Feature your business</a>
       </header>
 
       <aside className="sidebar">
+        <nav className="pagenav" aria-label="Map pages">
+          <a href="/" className={!currentSlug ? "on" : ""}>All of Wyoming</a>
+          {LANDING_PAGES.map((p) => (
+            <a key={p.slug} href={`/${p.slug}`} className={p.slug === currentSlug ? "on" : ""}>
+              {p.h1}
+            </a>
+          ))}
+        </nav>
+
+        {intro && (
+          <div className="intro">
+            <h1>{intro.h1}</h1>
+            <p>{intro.text}</p>
+          </div>
+        )}
+
         <div className="filters">
           <span className="label">Right now</span>
           <div className="chips">
@@ -195,28 +267,12 @@ export default function Explorer({ places }: { places: Place[] }) {
         </div>
 
         <ul className="list">
-          {fireFeatures.map((f) => {
-            const id = fireId(f);
-            return (
-              <li key={id}>
-                <button
-                  className={"row" + (id === active ? " active" : "")}
-                  onClick={() => setActive(id)}
-                >
-                  <span className="dot" style={{ background: FIRE_COLOR }} />
-                  <span>
-                    <div className="name">{f.properties.name} fire</div>
-                    <div className="sub">{fireSubtitle(f.properties)}</div>
-                  </span>
-                </button>
-              </li>
-            );
-          })}
+          {firesFirst && fireRows}
           {visible.map((p) => (
             <li key={p.slug}>
               <button
                 className={"row" + (p.slug === active ? " active" : "")}
-                onClick={() => setActive(p.slug)}
+                onClick={() => select(p.slug)}
               >
                 <span className="dot" style={{ background: CATEGORY_COLORS[p.category] }} />
                 <span>
@@ -226,11 +282,12 @@ export default function Explorer({ places }: { places: Place[] }) {
               </button>
             </li>
           ))}
+          {!firesFirst && fireRows}
         </ul>
 
         {currentPlace && (
           <div className="detail">
-            <button className="close" onClick={() => setActive(null)} aria-label="Close">
+            <button className="close" onClick={() => select(null)} aria-label="Close">
               ×
             </button>
             <div className="kicker">
@@ -253,7 +310,7 @@ export default function Explorer({ places }: { places: Place[] }) {
 
         {currentFire && (
           <div className="detail">
-            <button className="close" onClick={() => setActive(null)} aria-label="Close">
+            <button className="close" onClick={() => select(null)} aria-label="Close">
               ×
             </button>
             <div className="kicker">
@@ -297,7 +354,22 @@ export default function Explorer({ places }: { places: Place[] }) {
       </aside>
 
       <div className="mapwrap">
-        <WyomingMap points={points} overlays={overlays} activeId={active} onSelect={onSelect} />
+        <WyomingMap
+          points={points}
+          overlays={overlays}
+          activeId={active}
+          onSelect={select}
+          initialBounds={bounds}
+          satellite={satellite}
+        />
+        <button
+          className={"map-toggle" + (satellite ? " on" : "")}
+          onClick={() => setSatellite((v) => !v)}
+          aria-pressed={satellite}
+          title="Toggle satellite imagery (USGS)"
+        >
+          {satellite ? "Map" : "Satellite"}
+        </button>
       </div>
     </div>
   );

@@ -59,6 +59,21 @@ it would break the moment they rotate it. The right path is WYDOT's official tra
 information data program (request access through WYDOT). Until then the map links out to
 wyoroad.info.
 
+## Pages
+
+| route | what it is |
+|---|---|
+| `/` | The whole map, all categories. |
+| `/yellowstone`, `/grand-teton`, `/scenic-drives`, `/photo-spots`, `/wildfires` | Themed views of the same map, defined in `lib/pages.ts`: scoped places, preset categories, a starting viewport, and real intro text for search engines. Prerendered; unknown slugs 404. |
+| `/feature-your-business` | Sponsor pitch. Contact is a mailto to `CONTACT_EMAIL` in `lib/site.ts`, which is a placeholder until the real inbox exists. |
+| `/sitemap.xml`, `/robots.txt` | Generated from the page list. |
+
+`?place=<slug>` on any map page preselects that place and is kept in sync as the visitor
+clicks, so links are shareable. Fires never enter the URL.
+
+The satellite toggle swaps in free USGS orthoimagery under the labels. Analytics is
+`@vercel/analytics`, which only reports on Vercel deployments.
+
 ## Components
 
 - `components/Explorer.tsx` — sidebar (live toggles, category filters, list, detail panels)
@@ -69,9 +84,12 @@ wyoroad.info.
 
 ## Next
 
+- Set the real contact inbox in `lib/site.ts` before going live
 - Road closures once WYDOT data access is arranged
 - Weather warnings (NWS watches/warnings feature service, public, no key)
-- Custom map style
+- Custom map style (colors and type); the satellite toggle is in
+- Photos for places, properly sourced
+- Sponsored pins: data field, marker style, and the sidebar treatment promised on the sponsor page
 - Themed landing pages for search
 - Sponsor-interest page
 - Analytics
