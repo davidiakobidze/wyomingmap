@@ -98,7 +98,8 @@ export default function WyomingMap({
     const m = map.current;
     if (!m || !activeId) return;
     const p = points.find((x) => x.id === activeId);
-    if (p) m.easeTo({ center: [p.lng, p.lat], zoom: Math.max(m.getZoom(), 7.5), duration: 600 });
+    // Photo spots inside Yellowstone sit a few km apart; 8.5 is close enough to tell them apart.
+    if (p) m.easeTo({ center: [p.lng, p.lat], zoom: Math.max(m.getZoom(), 8.5), duration: 600 });
   }, [activeId, points]);
 
   if (unsupported) {
