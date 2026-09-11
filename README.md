@@ -1,14 +1,22 @@
 # Wyoming Map
 
-Everything under construction in Wyoming, on one map. Energy, data centers, critical minerals, uranium, carbon storage, and transmission, with developer, county, and permit status.
+Clean slate. The previous product (Wyoming Development Intelligence — an energy,
+data-center, minerals, and transmission project tracker) was removed to make room for a
+new direction. Its full history is preserved in git at commit `46544a9` on `main`.
 
-This is the free public face of Wyoming Development Intelligence. The paid tiers (pro and enterprise) add parcel and lease-position layers, wildlife overlays, and permit-change alerts.
+## What's here
+
+A working Next.js + MapLibre foundation, product-neutral and ready for content:
+
+- `components/WyomingMap.tsx` — MapLibre map bounded to Wyoming, using OpenFreeMap tiles
+  (no API key). Takes an optional `MapPoint[]` and renders click-selectable markers.
+- `components/MapCanvas.tsx` — client wrapper that keeps MapLibre out of the server bundle.
+- `app/globals.css` — layout primitives and a neutral paper palette.
 
 ## Stack
 
 - Next.js 14, React 18, TypeScript
-- MapLibre GL with OpenFreeMap tiles (no API key)
-- Project data in `data/projects.json`, served at `/api/projects`
+- MapLibre GL with OpenFreeMap tiles
 
 ## Develop
 
@@ -17,8 +25,7 @@ npm install
 npm run dev
 ```
 
-## Data
+## Next
 
-Each project record carries `slug`, `type`, `status`, `developer`, `county`, approximate `lat`/`lng`, a one-paragraph `summary`, an `updated` date, and `sources`. Locations are approximate until replaced by agency-published footprints.
-
-Planned feeds: Industrial Siting Council dockets, DEQ Class VI permits, WOGCC wells, OSLI leases, BLM ePlanning, WGFD sage-grouse core areas and migration corridors, county parcels.
+The new product direction has not been scoped yet. Curated place data, live layers, and
+page structure are all still open.

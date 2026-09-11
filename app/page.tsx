@@ -1,6 +1,15 @@
-import Explorer from "@/components/Explorer";
-import { projects } from "@/lib/projects";
+import MapCanvas from "@/components/MapCanvas";
 
 export default function Home() {
-  return <Explorer projects={projects} />;
+  return (
+    <div className="shell">
+      <header className="topbar">
+        <a className="brand" href="/">Wyoming Map</a>
+        <span className="tagline">One view to understand Wyoming.</span>
+      </header>
+      <div className="mapwrap">
+        <MapCanvas />
+      </div>
+    </div>
+  );
 }
