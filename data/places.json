@@ -1,0 +1,269 @@
+[
+  {
+    "slug": "yellowstone",
+    "name": "Yellowstone National Park",
+    "category": "park",
+    "region": "Yellowstone",
+    "lat": 44.43, "lng": -110.59,
+    "summary": "The world's first national park. Geysers, hot springs, the Grand Canyon of the Yellowstone, and the largest bison herd on public land in the United States. Nearly all of it is in Wyoming.",
+    "season": "Interior roads close to cars from early November until mid-to-late April. Only the north road between Gardiner and Cooke City stays open all year.",
+    "link": "https://www.nps.gov/yell/"
+  },
+  {
+    "slug": "grand-teton",
+    "name": "Grand Teton National Park",
+    "category": "park",
+    "region": "Grand Teton",
+    "lat": 43.6557, "lng": -110.7185,
+    "summary": "Jagged peaks rising about 7,000 feet straight off the valley floor with no foothills in the way. The main visitor center is at Moose, just north of Jackson.",
+    "season": "Open year-round. Teton Park Road closes to cars from November to May but is groomed for skiing and walking.",
+    "link": "https://www.nps.gov/grte/"
+  },
+  {
+    "slug": "devils-tower",
+    "name": "Devils Tower National Monument",
+    "category": "park",
+    "region": "Northeast Wyoming",
+    "lat": 44.5902, "lng": -104.7146,
+    "summary": "An 867-foot column of igneous rock rising over the Belle Fourche River, and the first national monument in the United States. Sacred to more than twenty tribes; a 1.3-mile paved loop circles the base.",
+    "link": "https://www.nps.gov/deto/"
+  },
+  {
+    "slug": "fossil-butte",
+    "name": "Fossil Butte National Monument",
+    "category": "park",
+    "region": "Southwest Wyoming",
+    "lat": 41.8571, "lng": -110.7691,
+    "summary": "Some of the best-preserved fossil fish anywhere, from a lake bed about 52 million years old. Small, quiet, and free, a few miles west of Kemmerer.",
+    "link": "https://www.nps.gov/fobu/"
+  },
+  {
+    "slug": "bighorn-canyon-devil-canyon-overlook",
+    "name": "Bighorn Canyon (Devil Canyon Overlook)",
+    "category": "park",
+    "region": "Bighorn Basin",
+    "lat": 44.94, "lng": -108.24,
+    "summary": "A sheer drop of roughly 1,000 feet to the reservoir below. The overlook is the best single stop in the recreation area, reached from Lovell.",
+    "link": "https://www.nps.gov/bica/"
+  },
+  {
+    "slug": "yellowstone-south-entrance",
+    "name": "Yellowstone South Entrance",
+    "category": "park",
+    "region": "Yellowstone",
+    "lat": 44.1339, "lng": -110.6664,
+    "summary": "The entrance from Jackson and Grand Teton, via the John D. Rockefeller Jr. Memorial Parkway. Most visitors doing both parks come through here.",
+    "season": "Closed to cars from early November to mid-May.",
+    "link": "https://www.nps.gov/yell/"
+  },
+  {
+    "slug": "yellowstone-east-entrance",
+    "name": "Yellowstone East Entrance",
+    "category": "park",
+    "region": "Yellowstone",
+    "lat": 44.4903, "lng": -110.0006,
+    "summary": "The entrance from Cody, climbing over Sylvan Pass to Yellowstone Lake. The approach along the Buffalo Bill Scenic Byway is one of the best drives into the park.",
+    "season": "Sylvan Pass closes to cars in winter, typically early November to early May.",
+    "link": "https://www.nps.gov/yell/"
+  },
+  {
+    "slug": "yellowstone-northeast-entrance",
+    "name": "Yellowstone Northeast Entrance",
+    "category": "park",
+    "region": "Yellowstone",
+    "lat": 45.0045, "lng": -110.0083,
+    "summary": "The entrance from Cooke City and the Beartooth Highway. The Lamar Valley wildlife road begins right inside the gate.",
+    "season": "Open year-round from Cooke City. The Beartooth Highway beyond Cooke City closes in winter.",
+    "link": "https://www.nps.gov/yell/"
+  },
+
+  {
+    "slug": "beartooth-highway",
+    "name": "Beartooth Highway (US-212)",
+    "category": "scenic-drive",
+    "region": "Yellowstone",
+    "lat": 44.9694, "lng": -109.4678,
+    "summary": "Often called the most beautiful drive in America. Switchbacks climb to Beartooth Pass at 10,947 feet, through alpine tundra and past dozens of lakes, between Red Lodge, Montana and Yellowstone's Northeast Entrance. Marker is at the pass.",
+    "season": "Closed roughly mid-October to late May. Snow can close it briefly any month.",
+    "link": "https://en.wikipedia.org/wiki/Beartooth_Highway"
+  },
+  {
+    "slug": "chief-joseph-scenic-byway",
+    "name": "Chief Joseph Scenic Byway (WY-296)",
+    "category": "scenic-drive",
+    "region": "Yellowstone",
+    "lat": 44.7406, "lng": -109.3944,
+    "summary": "Follows the route the Nez Perce took fleeing the US Army in 1877. The overlook at Dead Indian Pass looks down thousands of feet into the Clarks Fork canyon. Connects Cody to the Beartooth Highway. Marker is at the pass overlook.",
+    "season": "Open year-round, but check conditions in winter.",
+    "link": "https://en.wikipedia.org/wiki/Chief_Joseph_Scenic_Byway"
+  },
+  {
+    "slug": "buffalo-bill-scenic-byway",
+    "name": "Buffalo Bill Scenic Byway (US-14/16/20)",
+    "category": "scenic-drive",
+    "region": "Yellowstone",
+    "lat": 44.4667, "lng": -109.6833,
+    "summary": "Cody to Yellowstone's East Entrance along the North Fork of the Shoshone River, past red rock hoodoos and the Wapiti Valley. Marker is mid-valley.",
+    "season": "Open year-round to Pahaska Tepee; the park entrance beyond closes in winter.",
+    "link": "https://en.wikipedia.org/wiki/Buffalo_Bill_Cody_Scenic_Byway"
+  },
+  {
+    "slug": "togwotee-pass",
+    "name": "Togwotee Pass (US-26/287)",
+    "category": "scenic-drive",
+    "region": "Grand Teton",
+    "lat": 43.7494, "lng": -110.0625,
+    "summary": "The road from Dubois to Jackson crosses the Continental Divide at 9,658 feet. Coming west, the Tetons appear all at once as you drop off the pass; it is the classic first view of the range. Marker is at the summit.",
+    "season": "Open year-round, plowed. Heavy snow country; carry chains in winter.",
+    "link": "https://en.wikipedia.org/wiki/Togwotee_Pass"
+  },
+  {
+    "slug": "snowy-range-scenic-byway",
+    "name": "Snowy Range Scenic Byway (WY-130)",
+    "category": "scenic-drive",
+    "region": "Southeast Wyoming",
+    "lat": 41.3608, "lng": -106.2825,
+    "summary": "Laramie to Saratoga over the Medicine Bow Mountains, topping out above 10,800 feet at Snowy Range Pass. Alpine lakes and the quartzite face of Medicine Bow Peak right beside the road. Marker is near the pass.",
+    "season": "The high section closes from roughly mid-November to late May.",
+    "link": "https://en.wikipedia.org/wiki/Wyoming_Highway_130"
+  },
+  {
+    "slug": "bighorn-scenic-byway",
+    "name": "Bighorn Scenic Byway (US-14)",
+    "category": "scenic-drive",
+    "region": "Bighorn Mountains",
+    "lat": 44.56, "lng": -107.54,
+    "summary": "Climbs Shell Canyon from the Bighorn Basin to the top of the Bighorns, past Shell Falls and layers of rock over a billion years old. Marker is near Shell Falls.",
+    "season": "Open year-round, plowed, but expect snow at the top well into June.",
+    "link": "https://en.wikipedia.org/wiki/U.S._Route_14_in_Wyoming"
+  },
+  {
+    "slug": "cloud-peak-skyway",
+    "name": "Cloud Peak Skyway (US-16)",
+    "category": "scenic-drive",
+    "region": "Bighorn Mountains",
+    "lat": 44.1583, "lng": -107.0472,
+    "summary": "Buffalo to Ten Sleep over Powder River Pass at 9,666 feet, with views of Cloud Peak, the highest point in the Bighorns. The descent through Ten Sleep Canyon is the highlight. Marker is at the pass.",
+    "season": "Open year-round, plowed.",
+    "link": "https://en.wikipedia.org/wiki/U.S._Route_16_in_Wyoming"
+  },
+  {
+    "slug": "wind-river-canyon",
+    "name": "Wind River Canyon (US-20)",
+    "category": "scenic-drive",
+    "region": "Central Wyoming",
+    "lat": 43.53, "lng": -108.16,
+    "summary": "Between Thermopolis and Shoshoni the highway runs the bottom of a canyon cut through rock that gets older the further you drive south, with roadside signs naming each formation. Marker is mid-canyon.",
+    "season": "Open year-round.",
+    "link": "https://en.wikipedia.org/wiki/Wind_River_Canyon"
+  },
+
+  {
+    "slug": "old-faithful",
+    "name": "Old Faithful",
+    "category": "photo-spot",
+    "region": "Yellowstone",
+    "lat": 44.4605, "lng": -110.8281,
+    "summary": "The most famous geyser on earth. Eruptions are predicted to within about ten minutes; the visitor center and the lodge post the next time. Get there early for a front-row seat on the boardwalk.",
+    "link": "https://www.nps.gov/yell/"
+  },
+  {
+    "slug": "grand-prismatic-overlook",
+    "name": "Grand Prismatic Spring Overlook",
+    "category": "photo-spot",
+    "region": "Yellowstone",
+    "lat": 44.5216, "lng": -110.8298,
+    "summary": "The famous rainbow-ringed view of the largest hot spring in the United States. It is only visible from above: take the short spur off the Fairy Falls trail, about 0.6 miles each way from the trailhead. Midday, when the steam thins, gives the best color.",
+    "link": "https://en.wikipedia.org/wiki/Grand_Prismatic_Spring"
+  },
+  {
+    "slug": "artist-point",
+    "name": "Artist Point",
+    "category": "photo-spot",
+    "region": "Yellowstone",
+    "lat": 44.7197, "lng": -110.4794,
+    "summary": "The classic view of the 308-foot Lower Falls dropping into the yellow-walled Grand Canyon of the Yellowstone. A short paved walk from the parking area on the South Rim.",
+    "link": "https://www.nps.gov/yell/"
+  },
+  {
+    "slug": "mammoth-hot-springs",
+    "name": "Mammoth Hot Springs",
+    "category": "photo-spot",
+    "region": "Yellowstone",
+    "lat": 44.9682, "lng": -110.7053,
+    "summary": "Terraces of white and orange travertine built up by hot water over thousands of years, right beside the park's headquarters. Boardwalks climb the terraces; elk graze the lawns below.",
+    "link": "https://en.wikipedia.org/wiki/Mammoth_Hot_Springs"
+  },
+  {
+    "slug": "lamar-valley",
+    "name": "Lamar Valley",
+    "category": "photo-spot",
+    "region": "Yellowstone",
+    "lat": 44.8985, "lng": -110.2366,
+    "summary": "The best place in the lower 48 to see wolves in the wild, plus bison, pronghorn, and grizzlies. Go at dawn or dusk, bring binoculars, and pull over where the people with spotting scopes are.",
+    "link": "https://en.wikipedia.org/wiki/Lamar_Valley"
+  },
+  {
+    "slug": "hayden-valley",
+    "name": "Hayden Valley",
+    "category": "photo-spot",
+    "region": "Yellowstone",
+    "lat": 44.6567, "lng": -110.4667,
+    "summary": "Broad open meadows along the Yellowstone River between Canyon and the lake, and the surest place in the park to be stopped by a bison herd crossing the road. Best at dawn and dusk.",
+    "link": "https://en.wikipedia.org/wiki/Hayden_Valley"
+  },
+  {
+    "slug": "west-thumb-geyser-basin",
+    "name": "West Thumb Geyser Basin",
+    "category": "photo-spot",
+    "region": "Yellowstone",
+    "lat": 44.4165, "lng": -110.5735,
+    "summary": "Hot springs and small geysers on the very shore of Yellowstone Lake, with the Absaroka Range across the water. A quiet half-mile boardwalk loop.",
+    "link": "https://en.wikipedia.org/wiki/West_Thumb_Geyser_Basin"
+  },
+  {
+    "slug": "schwabacher-landing",
+    "name": "Schwabacher Landing",
+    "category": "photo-spot",
+    "region": "Grand Teton",
+    "lat": 43.7127, "lng": -110.6753,
+    "summary": "Beaver ponds off the Snake River that mirror the whole Teton range on a still morning. The sunrise spot in the park; arrive before first light.",
+    "link": "https://en.wikipedia.org/wiki/Schwabacher_Landing"
+  },
+  {
+    "slug": "mormon-row",
+    "name": "Mormon Row (T.A. Moulton Barn)",
+    "category": "photo-spot",
+    "region": "Grand Teton",
+    "lat": 43.6597, "lng": -110.6716,
+    "summary": "A weathered 1910s barn with the Tetons rising behind it; probably the most photographed barn in the country. Sunrise lights the peaks first, then the barn.",
+    "link": "https://en.wikipedia.org/wiki/Mormon_Row_Historic_District"
+  },
+  {
+    "slug": "oxbow-bend",
+    "name": "Oxbow Bend",
+    "category": "photo-spot",
+    "region": "Grand Teton",
+    "lat": 43.8653, "lng": -110.5487,
+    "summary": "A slow bend of the Snake River reflecting Mount Moran. Best at sunrise, and best of all in late September when the aspens turn.",
+    "link": "https://en.wikipedia.org/wiki/Oxbow_Bend"
+  },
+  {
+    "slug": "snake-river-overlook",
+    "name": "Snake River Overlook",
+    "category": "photo-spot",
+    "region": "Grand Teton",
+    "lat": 43.7657, "lng": -110.6157,
+    "summary": "The view Ansel Adams photographed in 1942. The trees have grown since and hide more of the river, but the Tetons above the bend are unchanged. A pullout on US-89.",
+    "link": "https://en.wikipedia.org/wiki/Snake_River_Overlook"
+  },
+  {
+    "slug": "jenny-lake",
+    "name": "Jenny Lake",
+    "category": "photo-spot",
+    "region": "Grand Teton",
+    "lat": 43.7647, "lng": -110.7283,
+    "summary": "The lake at the foot of the Tetons. Take the boat shuttle across and walk to Hidden Falls and Inspiration Point, or shoot from the east shore with the peaks reflected in the water.",
+    "link": "https://en.wikipedia.org/wiki/Jenny_Lake"
+  }
+]

@@ -1,23 +1,33 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/react";
+import { SITE_NAME, SITE_URL, TAGLINE } from "@/lib/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Wyoming Map · Everything under construction in Wyoming",
+  title: {
+    default: `${SITE_NAME} · Parks, scenic drives, photo spots, and wildfires`,
+    template: `%s · ${SITE_NAME}`,
+  },
   description:
-    "Live map of Wyoming's energy, data-center, mining, and transmission projects with permit status, developer, and county.",
-  metadataBase: new URL("https://wyomingmap.com"),
+    "A curated map of Wyoming for visitors: Yellowstone and Grand Teton, the best scenic drives, where to stand for the photo, and what is burning right now.",
+  metadataBase: new URL(SITE_URL),
+  alternates: { canonical: SITE_URL },
   openGraph: {
-    title: "Wyoming Map",
-    description: "Everything under construction in Wyoming, on one map.",
-    url: "https://wyomingmap.com",
-    siteName: "Wyoming Map",
+    title: SITE_NAME,
+    description: TAGLINE,
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    type: "website",
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
