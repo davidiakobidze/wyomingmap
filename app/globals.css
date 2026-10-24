@@ -288,6 +288,10 @@ a { color: var(--accent); }
   margin: 32px 0;
 }
 .article .nearby { columns: 2; }
+.article h3 { font-family: var(--disp); font-size: 17px; margin: 20px 0 6px; }
+.article table.seasons td:first-child, .article table.seasons td:nth-child(2) { white-space: nowrap; }
+.article details.boundary { margin: 24px 0; }
+.article details.boundary p { font-size: 14px; color: var(--ink-2); }
 
 @media (max-width: 800px) {
   .shell { grid-template-columns: 1fr; grid-template-rows: auto 45vh 1fr; }

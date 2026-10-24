@@ -218,6 +218,7 @@ export default function Explorer({
             </a>
           ))}
           <a href="/hunting/elk">Elk hunt areas</a>
+          <a href="/hunting/deer">Deer hunt areas</a>
         </nav>
 
         {intro && (
