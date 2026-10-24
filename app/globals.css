@@ -256,9 +256,45 @@ a { color: var(--accent); }
 }
 .article .fine { font-size: 13px; color: var(--ink-3); margin-top: 32px; }
 
+/* Hunt-area pages: an article with a map, facts, and draw tables. */
+.article.wide { max-width: 880px; }
+.hunt-map { height: 420px; margin: 20px 0; border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
+.article .facts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 0 0 8px;
+}
+.article .facts dt { font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.04em; }
+.article .facts dd { margin: 2px 0 0; font-size: 15px; }
+.article .hunt { border-top: 1px solid var(--rule); margin-top: 24px; }
+.article .draws { list-style: none; padding: 0; }
+.article .draws li { margin: 6px 0; }
+.article .draws .table-item { margin-left: 16px; }
+.article details summary { cursor: pointer; color: var(--accent); font-size: 14px; }
+.article table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0; }
+.article th, .article td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--rule); }
+.article th { font-size: 12px; color: var(--ink-3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+.article table.odds { max-width: 420px; }
+.article table.odds td:not(:first-child), .article table.odds th:not(:first-child) { text-align: right; font-family: var(--mono); font-size: 13px; }
+.article table.odds tr.partial { background: #f6ecd6; }
+.article table.odds tr.none { color: var(--ink-3); }
+.article .table-scroll { overflow-x: auto; margin: 16px 0; }
+.article table.areas td:first-child { font-family: var(--mono); }
+.article .callout {
+  background: var(--paper-2);
+  border-left: 3px solid var(--amber);
+  padding: 4px 18px 18px;
+  margin: 32px 0;
+}
+.article .nearby { columns: 2; }
+
 @media (max-width: 800px) {
   .shell { grid-template-columns: 1fr; grid-template-rows: auto 45vh 1fr; }
   .sidebar { border-right: 0; border-top: 1px solid var(--rule); order: 3; }
   .mapwrap { order: 2; }
   .tagline, .topbar .count { display: none; }
+  .article .facts { grid-template-columns: repeat(2, 1fr); }
+  .hunt-map { height: 320px; }
+  .article .nearby { columns: 1; }
 }
