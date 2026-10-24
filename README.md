@@ -34,21 +34,31 @@ Each place in `data/places.json` has:
 | `season` | optional; closures and timing that change a trip |
 | `link` | optional; official NPS page or Wikipedia |
 
-### Elk hunt areas
+### Hunt areas (elk, deer)
 
-`/hunting/elk` and one page per area at `/hunting/elk/area-N` are built from
-`data/elk-hunt-areas.json` (draw odds plus boundaries) and
-`public/data/elk-hunt-areas.geojson` (boundaries only, for the statewide map). Both are
-generated from Wyoming Game and Fish's published draw reports and its `ElkHuntAreas`
-ArcGIS layer:
+One page per hunt area, built from Wyoming Game and Fish's published draw reports and
+its ArcGIS hunt-area layers:
+
+| route | data |
+|---|---|
+| `/hunting/elk`, `/hunting/elk/area-N` | `data/elk-hunt-areas.json` |
+| `/hunting/deer`, `/hunting/deer/area-N`, `/hunting/deer/region-x` | `data/deer-hunt-areas.json` |
+
+`public/data/<species>-hunt-areas.geojson` holds the boundaries alone, for the statewide
+map. Deer also carries season dates, legal deer and boundary descriptions from WGFD
+Chapter 6 (Deer Hunting Seasons), and the 17 nonresident general-license regions get their
+own pages, since nonresidents draw deer by region rather than by area.
 
 ```bash
-python3 -I scripts/elk/build_elk_data.py /tmp/wgfd
+python3 -I scripts/hunts/build_hunt_data.py elk /tmp/wgfd
+python3 -I scripts/hunts/build_hunt_data.py deer /tmp/wgfd
 ```
 
 Needs `pdftotext` (poppler). WGFD posts new reports every year (nonresident in May,
-resident in June) under new media ids; update `YEAR` and `REPORTS` in the script, rerun,
-and check that the printed hunt count matches the reports.
+resident in June) and a new season regulation, each under new media ids; update `YEAR`
+and the ids in `SPECIES` in the script, rerun, check that the printed hunt counts match
+the reports, and read any warnings (a season row the parser could not place, an area with
+no boundary description).
 
 Photos are not in yet. When they are, they need to be sourced and licensed, not scraped.
 

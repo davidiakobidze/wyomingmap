@@ -1,28 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import HuntAreaMap from "@/components/HuntAreaMap";
-import {
-  DemandDraw,
-  ELK_AREAS,
-  ELK_SOURCES,
-  ELK_YEAR,
-  ElkArea,
-  ElkHunt,
-  PointsDraw,
-  areaFeature,
-  chanceLabel,
-  collection,
-  elkPath,
-  elkSlug,
-  firstChoiceChance,
-  getElkArea,
-  labelPoint,
-  mainHunt,
-  neighbors,
-  pointsLabel,
-  pointsNeeded,
-  pointsSentence,
-} from "@/lib/elk";
+import { Demand, NonresidentDraws } from "@/components/HuntDraws";
+import { ELK_AREAS, ELK_SOURCES, ELK_YEAR, ElkArea, ElkHunt, elkPath, elkSlug, getElkArea, mainHunt, neighbors } from "@/lib/elk";
+import { areaFeature, collection, marker, oddsPhrase, pointsPhrase } from "@/lib/hunts";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const dynamicParams = false;
@@ -33,13 +14,6 @@ export function generateStaticParams() {
 
 const num = new Intl.NumberFormat("en-US");
 
-function oddsPhrase(who: "resident" | "nonresident", d: DemandDraw): string {
-  const c = firstChoiceChance(d);
-  if (c === null) return `no ${who} applied for it as a first choice`;
-  if (c >= 100) return `there were enough licenses for every ${who} who put it first`;
-  return `${who}s' first-choice odds were ${chanceLabel(c)}`;
-}
-
 // The two numbers people search for, in one line: what a nonresident needs in
 // points and what a resident's odds were, for the area's main any-elk hunt.
 function headline(a: ElkArea): string {
@@ -47,12 +21,7 @@ function headline(a: ElkArea): string {
   if (!h) return `No limited-quota elk licenses were drawn for Area ${a.area} in ${ELK_YEAR}.`;
   const parts: string[] = [];
   if (h.nrPoints) {
-    const need = pointsNeeded(h.nrPoints);
-    parts.push(
-      need === null
-        ? "nonresidents drew with any number of preference points"
-        : `nonresidents needed about ${Math.ceil(need)} preference points`
-    );
+    parts.push(pointsPhrase(h.nrPoints));
   } else if (h.nrCowCalf) {
     parts.push(oddsPhrase("nonresident", h.nrCowCalf));
   }
@@ -76,58 +45,6 @@ export function generateMetadata({ params }: { params: { area: string } }): Meta
   };
 }
 
-function PointsTable({ d }: { d: PointsDraw }) {
-  const rows = d.rows.filter((r) => r.applicants > 0);
-  if (rows.length === 0) return null;
-  return (
-    <table className="odds">
-      <thead>
-        <tr>
-          <th>Points</th>
-          <th>First-choice applicants</th>
-          <th>Odds</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((r, i) => (
-          <tr key={i} className={r.odds >= 100 ? "sure" : r.odds > 0 ? "partial" : "none"}>
-            <td>{pointsLabel(r.points)}</td>
-            <td>{num.format(r.applicants)}</td>
-            <td>{r.odds % 1 === 0 ? r.odds.toFixed(0) : r.odds.toFixed(2)}%</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
-function Demand({ label, d }: { label: string; d: DemandDraw }) {
-  return (
-    <li>
-      <strong>{label}:</strong> {num.format(d.quota)} licenses, {num.format(d.first)} first-choice applicants
-      {d.first > 0 && <> ({chanceLabel(firstChoiceChance(d))})</>}.
-    </li>
-  );
-}
-
-function Points({ label, d }: { label: string; d: PointsDraw }) {
-  return (
-    <>
-      <li>
-        <strong>{label}:</strong> {num.format(d.quota)} licenses. {pointsSentence(d)}
-      </li>
-      {d.summary.applicants > 0 && !d.summary.allDrew && (
-        <li className="table-item">
-          <details>
-            <summary>Point-by-point results</summary>
-            <PointsTable d={d} />
-          </details>
-        </li>
-      )}
-    </>
-  );
-}
-
 function Hunt({ h }: { h: ElkHunt }) {
   return (
     <section className="hunt" id={`type-${h.type}`}>
@@ -135,10 +52,7 @@ function Hunt({ h }: { h: ElkHunt }) {
         Type {h.type} · {h.description}
       </h2>
       <ul className="draws">
-        {h.nrPoints && <Points label="Nonresident, preference-point draw" d={h.nrPoints} />}
-        {h.nrRandom && <Demand label="Nonresident, random draw" d={h.nrRandom} />}
-        {h.nrSpecialPoints && <Points label="Nonresident special, preference-point draw" d={h.nrSpecialPoints} />}
-        {h.nrSpecialRandom && <Demand label="Nonresident special, random draw" d={h.nrSpecialRandom} />}
+        <NonresidentDraws d={h} />
         {h.nrCowCalf && <Demand label="Nonresident" d={h.nrCowCalf} />}
         {h.resident && <Demand label="Resident" d={h.resident} />}
         {h.residentCowCalf && <Demand label="Resident" d={h.residentCowCalf} />}
@@ -168,7 +82,7 @@ export default function ElkAreaPage({ params }: { params: { area: string } }) {
 
       <HuntAreaMap
         areas={collection(shown.map((x) => areaFeature(x)))}
-        markers={shown.map((x) => ({ area: x.area, name: x.name, ...labelPoint(x) }))}
+        markers={shown.map(marker)}
         bounds={a.bbox}
         highlight={a.area}
         hrefFor="/hunting/elk/area-{area}"

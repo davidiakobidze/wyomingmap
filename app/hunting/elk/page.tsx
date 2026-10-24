@@ -1,16 +1,7 @@
 import type { Metadata } from "next";
 import HuntAreaMap from "@/components/HuntAreaMap";
-import {
-  ELK_AREAS,
-  ELK_SOURCES,
-  ELK_YEAR,
-  chanceLabel,
-  elkPath,
-  firstChoiceChance,
-  labelPoint,
-  mainHunt,
-  pointsNeeded,
-} from "@/lib/elk";
+import { ELK_AREAS, ELK_SOURCES, ELK_YEAR, elkPath, mainHunt } from "@/lib/elk";
+import { chanceLabel, firstChoiceChance, marker, pointsNeeded } from "@/lib/hunts";
 import { SITE_NAME, SITE_URL, WYOMING_BOUNDS } from "@/lib/site";
 
 const title = `Wyoming elk hunt areas: ${ELK_YEAR} draw odds and points needed, by area`;
@@ -48,7 +39,7 @@ export default function ElkIndex() {
 
       <HuntAreaMap
         areasUrl="/data/elk-hunt-areas.geojson"
-        markers={ELK_AREAS.map((a) => ({ area: a.area, name: a.name, ...labelPoint(a) }))}
+        markers={ELK_AREAS.map(marker)}
         bounds={WYOMING_BOUNDS}
         hrefFor="/hunting/elk/area-{area}"
       />

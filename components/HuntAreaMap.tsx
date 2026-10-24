@@ -14,7 +14,8 @@ const OTHER = "#7c878c";
 const EMPTY: FeatureCollection = { type: "FeatureCollection", features: [] };
 
 // Hunt-area boundaries with one clickable marker per area. `highlight` is the
-// area the page is about; every other area is drawn faintly for context.
+// area the page is about (or the areas of a region page); every other area is
+// drawn faintly for context.
 export default function HuntAreaMap({
   areas: initialAreas,
   areasUrl,
@@ -29,7 +30,7 @@ export default function HuntAreaMap({
   areasUrl?: string;
   markers: { area: number; name: string; lat: number; lng: number }[];
   bounds: Bounds;
-  highlight?: number;
+  highlight?: number | number[];
   hrefFor: string; // path with {area} placeholder, e.g. "/hunting/elk/area-{area}"
 }) {
   const [satellite, setSatellite] = useState(false);
@@ -47,7 +48,8 @@ export default function HuntAreaMap({
       cancelled = true;
     };
   }, [areasUrl]);
-  const isHighlight = ["==", ["get", "area"], highlight ?? -1];
+  const lit = highlight === undefined ? [] : ([] as number[]).concat(highlight);
+  const isHighlight = ["in", ["get", "area"], ["literal", lit]];
 
   const overlays = useMemo<MapOverlay[]>(
     () => [
@@ -75,8 +77,9 @@ export default function HuntAreaMap({
         name: `Area ${m.area}: ${m.name}`,
         lat: m.lat,
         lng: m.lng,
-        color: m.area === highlight ? HIGHLIGHT : OTHER,
+        color: lit.includes(m.area) ? HIGHLIGHT : OTHER,
       })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [markers, highlight]
   );
 
@@ -87,6 +90,7 @@ export default function HuntAreaMap({
         overlays={overlays}
         activeId={null}
         onSelect={(id) => {
+          // Clicking the page's own area goes nowhere; on a region page every area links.
           if (Number(id) !== highlight) window.location.href = hrefFor.replace("{area}", id);
         }}
         initialBounds={bounds}
