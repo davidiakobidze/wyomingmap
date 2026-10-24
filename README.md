@@ -34,6 +34,22 @@ Each place in `data/places.json` has:
 | `season` | optional; closures and timing that change a trip |
 | `link` | optional; official NPS page or Wikipedia |
 
+### Elk hunt areas
+
+`/hunting/elk` and one page per area at `/hunting/elk/area-N` are built from
+`data/elk-hunt-areas.json` (draw odds plus boundaries) and
+`public/data/elk-hunt-areas.geojson` (boundaries only, for the statewide map). Both are
+generated from Wyoming Game and Fish's published draw reports and its `ElkHuntAreas`
+ArcGIS layer:
+
+```bash
+python3 -I scripts/elk/build_elk_data.py /tmp/wgfd
+```
+
+Needs `pdftotext` (poppler). WGFD posts new reports every year (nonresident in May,
+resident in June) under new media ids; update `YEAR` and `REPORTS` in the script, rerun,
+and check that the printed hunt count matches the reports.
+
 Photos are not in yet. When they are, they need to be sourced and licensed, not scraped.
 
 ## Live layers
