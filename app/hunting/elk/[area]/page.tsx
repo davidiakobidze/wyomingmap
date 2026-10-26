@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import HuntAreaMap from "@/components/HuntAreaMap";
-import { Demand, NonresidentDraws } from "@/components/HuntDraws";
+import { Demand, NonresidentDraws, OddsAssumptions } from "@/components/HuntDraws";
 import { ELK_AREAS, ELK_SOURCES, ELK_YEAR, ElkArea, ElkHunt, elkPath, elkSlug, getElkArea, mainHunt, neighbors } from "@/lib/elk";
-import { areaFeature, collection, marker, oddsPhrase, pointsPhrase } from "@/lib/hunts";
+import { areaFeature, collection, marker, nonresidentPhrase, oddsPhrase, sentences } from "@/lib/hunts";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const dynamicParams = false;
@@ -14,21 +14,22 @@ export function generateStaticParams() {
 
 const num = new Intl.NumberFormat("en-US");
 
-// The two numbers people search for, in one line: what a nonresident needs in
-// points and what a resident's odds were, for the area's main any-elk hunt.
+// The two numbers people search for: what a nonresident needs in points (and
+// their chance without them) and what a resident's odds were, for the area's
+// main any-elk hunt.
 function headline(a: ElkArea): string {
   const h = mainHunt(a);
   if (!h) return `No limited-quota elk licenses were drawn for Area ${a.area} in ${ELK_YEAR}.`;
   const parts: string[] = [];
   if (h.nrPoints) {
-    parts.push(pointsPhrase(h.nrPoints));
+    parts.push(nonresidentPhrase(h.nrPoints, h.nrRandom));
   } else if (h.nrCowCalf) {
     parts.push(oddsPhrase("nonresident", h.nrCowCalf));
   }
   const res = h.resident ?? h.residentCowCalf;
   if (res) parts.push(oddsPhrase("resident", res));
   if (parts.length === 0) return `Area ${a.area} had a Type ${h.type} license in the ${ELK_YEAR} draw.`;
-  return `In the ${ELK_YEAR} draw for the Type ${h.type} ${h.description.toLowerCase()} license, ${parts.join(", and ")}.`;
+  return sentences(`In the ${ELK_YEAR} draw for the Type ${h.type} ${h.description.toLowerCase()} license,`, parts);
 }
 
 export function generateMetadata({ params }: { params: { area: string } }): Metadata {
@@ -118,6 +119,7 @@ export default function ElkAreaPage({ params }: { params: { area: string } }) {
       ) : (
         a.hunts.map((h) => <Hunt key={h.type} h={h} />)
       )}
+      {a.hunts.some((h) => h.nrPoints) && <OddsAssumptions year={ELK_YEAR} />}
 
       <aside className="callout">
         <h2>Outfitters licensed in Area {a.area}</h2>
@@ -148,11 +150,10 @@ export default function ElkAreaPage({ params }: { params: { area: string } }) {
       <h2>How to read this</h2>
       <p>
         Odds are what happened in the {ELK_YEAR} draw, published by Wyoming Game and Fish. They are not a
-        forecast; quotas and applicant numbers change every year. Preference-point odds are WGFD&apos;s own
-        figures. For random and resident draws WGFD publishes licenses and applicant counts, so the percentage
-        shown is the share of first-choice applicants there were licenses for, before second and third choices.
-        Rows marked &ldquo;just under&rdquo; a number are applicants between two point levels, which happens when
-        a party applies together and its points are averaged.
+        forecast; quotas and applicant numbers change every year. A nonresident&apos;s chance counts both the
+        preference-point draw and the random draw that everyone who misses it goes into; WGFD&apos;s own tables
+        show only the first, so they understate it. Resident and cow/calf draws are random: the percentage shown
+        is licenses divided by first-choice applicants, before second and third choices.
       </p>
       <p className="fine">
         Sources: <a href={ELK_SOURCES.odds}>WGFD draw results and odds</a> ({ELK_YEAR}) and the{" "}

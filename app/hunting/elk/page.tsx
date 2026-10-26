@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import HuntAreaMap from "@/components/HuntAreaMap";
 import { ELK_AREAS, ELK_SOURCES, ELK_YEAR, elkPath, mainHunt } from "@/lib/elk";
-import { chanceLabel, firstChoiceChance, marker, pointsNeeded } from "@/lib/hunts";
+import { chanceLabel, chanceShort, firstChoiceChance, marker, pointsNeeded, zeroPointChance } from "@/lib/hunts";
 import { SITE_NAME, SITE_URL, WYOMING_BOUNDS } from "@/lib/site";
 
 const title = `Wyoming elk hunt areas: ${ELK_YEAR} draw odds and points needed, by area`;
@@ -21,6 +21,7 @@ export default function ElkIndex() {
       a,
       h,
       need: h?.nrPoints ? pointsNeeded(h.nrPoints) : undefined,
+      zero: h?.nrPoints ? zeroPointChance(h.nrPoints, h.nrRandom) : null,
       res: h?.resident ? firstChoiceChance(h.resident) : undefined,
     };
   });
@@ -53,11 +54,12 @@ export default function ElkIndex() {
               <th>Herd</th>
               <th>Main license</th>
               <th>Nonresident points needed</th>
+              <th>Nonresident chance with 0 points</th>
               <th>Resident first-choice odds</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map(({ a, h, need, res }) => (
+            {rows.map(({ a, h, need, zero, res }) => (
               <tr key={a.area}>
                 <td>
                   <a href={elkPath(a)}>{a.area}</a>
@@ -68,6 +70,7 @@ export default function ElkIndex() {
                 <td>{a.herdName}</td>
                 <td>{h ? `Type ${h.type}, ${h.description.toLowerCase()}` : "None drawn"}</td>
                 <td>{need === undefined ? "—" : need === null ? "Any" : Math.ceil(need)}</td>
+                <td>{zero === null ? "—" : chanceShort(zero)}</td>
                 <td>{res === undefined ? "—" : chanceLabel(res)}</td>
               </tr>
             ))}
@@ -77,7 +80,8 @@ export default function ElkIndex() {
 
       <p className="fine">
         &ldquo;Points needed&rdquo; is the point level where the {ELK_YEAR} nonresident preference-point draw ran
-        out for the area&apos;s main any-elk license; at that level only some applicants drew. Resident odds are
+        out for the area&apos;s main any-elk license; at that level only some applicants drew. The 0-point chance
+        counts the random draw, which everyone who misses the point draw goes into. Resident odds are
         licenses divided by first-choice applicants. Sources:{" "}
         <a href={ELK_SOURCES.odds}>WGFD draw results and odds</a> and the{" "}
         <a href={ELK_SOURCES.boundaries}>WGFD elk hunt area boundaries</a>.

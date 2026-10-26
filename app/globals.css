@@ -291,6 +291,16 @@ a { color: var(--accent); }
 .article h3 { font-family: var(--disp); font-size: 17px; margin: 20px 0 6px; }
 .article table.seasons td:first-child, .article table.seasons td:nth-child(2) { white-space: nowrap; }
 .article details.boundary { margin: 24px 0; }
+.article details.assumptions {
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 10px 16px;
+  margin: 24px 0;
+  background: var(--paper-2);
+}
+.article details.assumptions[open] summary { margin-bottom: 4px; }
+.article details.assumptions li { font-size: 14px; margin: 6px 0; }
+.article details .fine { margin: 4px 0 0; font-size: 12.5px; }
 .article details.boundary p { font-size: 14px; color: var(--ink-2); }
 
 @media (max-width: 800px) {

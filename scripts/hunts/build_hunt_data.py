@@ -386,6 +386,17 @@ def main(species: str, workdir: Path) -> None:
         if missing:
             print("warning: no boundary description for areas:", missing, file=sys.stderr)
 
+    # The pages combine each preference-point draw with its random draw on the
+    # assumption that the random draw's first-choice pool is exactly the point
+    # draw's unsuccessful applicants. True for every 2026 draw; say so if not.
+    for k in keys:
+        for pp, rnd in (("nrPoints", "nrRandom"), ("nrSpecialPoints", "nrSpecialRandom")):
+            if k in tables.get(pp, {}) and k in tables.get(rnd, {}):
+                rows = tables[pp][k]["rows"]
+                losers = sum(r["applicants"] for r in rows) - sum(r["issued"] for r in rows)
+                if losers != tables[rnd][k]["first"]:
+                    print(f"warning: {k} {rnd} first-choice pool {tables[rnd][k]['first']} != point-draw losers {losers}", file=sys.stderr)
+
     # Nonresident general licenses, drawn by region rather than by area.
     regions: dict = {}
     for field, table in tables.items():
