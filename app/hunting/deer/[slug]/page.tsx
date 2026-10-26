@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import HuntAreaMap from "@/components/HuntAreaMap";
-import { Demand, NonresidentDraws } from "@/components/HuntDraws";
+import { Demand, NonresidentDraws, OddsAssumptions } from "@/components/HuntDraws";
 import {
   DEER_REGIONS,
   DEER_SOURCES,
@@ -23,13 +23,11 @@ import {
 import {
   RegionDraws,
   areaFeature,
-  chanceLabel,
   collection,
-  firstChoiceChance,
   marker,
+  nonresidentPhrase,
   oddsPhrase,
-  pointsNeededPhrase,
-  pointsPhrase,
+  sentences,
   unionBounds,
 } from "@/lib/hunts";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
@@ -42,22 +40,18 @@ export function generateStaticParams() {
 
 const num = new Intl.NumberFormat("en-US");
 
-// "; in the 2026 draw it took about 12 preference points", for a region's general license.
+// "In the 2026 draw for it, nonresidents needed about 12 preference points; ...", for a region's general license.
 function regionPoints(d: RegionDraws): string {
-  if (!d.nrPoints) return "";
-  const need = pointsNeededPhrase(d.nrPoints);
-  return need === null
-    ? `; every preference-point applicant drew it in ${DEER_YEAR}`
-    : `; in the ${DEER_YEAR} draw it took ${need}`;
+  return d.nrPoints ? ` In the ${DEER_YEAR} draw for it, ${nonresidentPhrase(d.nrPoints, d.nrRandom)}.` : "";
 }
 
-function drawPhrase(h: DeerHunt): string {
+function drawParts(h: DeerHunt): string[] {
   const parts: string[] = [];
-  if (h.nrPoints) parts.push(pointsPhrase(h.nrPoints));
+  if (h.nrPoints) parts.push(nonresidentPhrase(h.nrPoints, h.nrRandom));
   else if (h.nrDoeFawn) parts.push(oddsPhrase("nonresident", h.nrDoeFawn));
   const res = h.resident ?? h.residentDoeFawn;
   if (res) parts.push(oddsPhrase("resident", res));
-  return parts.join(", and ");
+  return parts;
 }
 
 // What people search for, in one or two sentences: when the general season
@@ -69,27 +63,24 @@ function areaHeadline(a: DeerArea): string {
     const g = a.general[0];
     return (
       `Area ${a.area} is open on a general deer license: the ${DEER_YEAR} general season runs ` +
-      `${seasonDates(g)}. Nonresidents need a Region ${a.region} general license` +
-      `${region ? regionPoints(region.draws) : ""}.`
+      `${seasonDates(g)}. Nonresidents need a Region ${a.region} general license.` +
+      `${region ? regionPoints(region.draws) : ""}`
     );
   }
   const h = mainHunt(a);
   if (!h) return `Area ${a.area} has no general deer season and no limited-quota licenses in ${DEER_YEAR}.`;
-  const draw = drawPhrase(h);
+  const parts = drawParts(h);
   return (
     `Area ${a.area} has no general deer season; every license is drawn.` +
-    (draw ? ` In the ${DEER_YEAR} draw for the Type ${h.type} license, ${draw}.` : "")
+    (parts.length ? ` ${sentences(`In the ${DEER_YEAR} draw for the Type ${h.type} license,`, parts)}` : "")
   );
 }
 
 function regionHeadline(r: DeerRegion): string {
-  const parts: string[] = [];
-  if (r.draws.nrPoints) parts.push(pointsPhrase(r.draws.nrPoints));
-  const random = firstChoiceChance(r.draws.nrRandom);
-  if (r.draws.nrRandom) parts.push(`random-draw odds were ${chanceLabel(random)}`);
+  const draw = r.draws.nrPoints ? nonresidentPhrase(r.draws.nrPoints, r.draws.nrRandom) : "";
   return (
     `In the ${DEER_YEAR} draw for Wyoming's Region ${r.region} nonresident general deer license, ` +
-    `${parts.join(", and ")}. The license is good in ${r.generalAreas.length} hunt ${r.generalAreas.length === 1 ? "area" : "areas"} during their general seasons.`
+    `${draw}. The license is good in ${r.generalAreas.length} hunt ${r.generalAreas.length === 1 ? "area" : "areas"} during their general seasons.`
   );
 }
 
@@ -185,11 +176,10 @@ function HowToRead() {
       <h2>How to read this</h2>
       <p>
         Draw results are what happened in the {DEER_YEAR} draw, published by Wyoming Game and Fish. They are not
-        a forecast; quotas and applicant numbers change every year. Preference-point odds are WGFD&apos;s own
-        figures. For random and resident draws WGFD publishes licenses and applicant counts, so the percentage
-        shown is the share of first-choice applicants there were licenses for, before second and third choices.
-        Rows marked &ldquo;just under&rdquo; a number are applicants between two point levels, which happens when
-        a party applies together and its points are averaged.
+        a forecast; quotas and applicant numbers change every year. A nonresident&apos;s chance counts both the
+        preference-point draw and the random draw that everyone who misses it goes into; WGFD&apos;s own tables
+        show only the first, so they understate it. Resident and doe/fawn draws are random: the percentage shown
+        is licenses divided by first-choice applicants, before second and third choices.
       </p>
       <p>
         Season dates and legal deer are from WGFD Chapter 6, Deer Hunting Seasons. Where a draw report and the
@@ -291,6 +281,8 @@ function AreaPage({ a }: { a: DeerArea }) {
         </p>
       )}
 
+      {(a.general.length > 0 || a.hunts.some((h) => h.nrPoints)) && <OddsAssumptions year={DEER_YEAR} />}
+
       {!a.closed && <Outfitters where={`Area ${a.area}`} subject={`Outfitter listing: Deer Area ${a.area}`} />}
 
       {a.boundary && (
@@ -341,6 +333,7 @@ function RegionPage({ r }: { r: DeerRegion }) {
       <ul className="draws">
         <NonresidentDraws d={r.draws} />
       </ul>
+      <OddsAssumptions year={DEER_YEAR} />
 
       <h2>Areas in Region {r.region}</h2>
       <div className="table-scroll">

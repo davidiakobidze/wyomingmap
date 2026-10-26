@@ -60,21 +60,7 @@ export function pointsLabel(label: string): string {
 export const points = (label: string) => `${label} point${/(^|\D)1$/.test(label) ? "" : "s"}`;
 export const preferencePoints = (n: number) => `${n} preference point${n === 1 ? "" : "s"}`;
 
-const pct = (n: number) => `${n % 1 === 0 ? n.toFixed(0) : n.toFixed(1)}%`;
-
-// One sentence a hunter can act on, from WGFD's preference-point table.
-export function pointsSentence(d: PointsDraw): string {
-  const s = d.summary;
-  if (d.quota === 0) return "No licenses were set aside for the preference-point draw.";
-  if (s.applicants === 0) return "Nobody applied for it as a first choice.";
-  if (s.allDrew) return "Every applicant drew, whatever their points.";
-  if (s.partial) {
-    const at = pointsLabel(s.partial.points);
-    return `The draw ran out at ${points(at)}: ${pct(s.partial.odds)} of applicants there drew, and everyone above it drew.`;
-  }
-  if (s.lowestSure) return `Everyone with ${points(pointsLabel(s.lowestSure))} or more drew; nobody below that did.`;
-  return "Nobody drew.";
-}
+const num = new Intl.NumberFormat("en-US");
 
 // Points needed for a sure tag, as a number for sorting; null when anyone could draw.
 export function pointsNeeded(d?: PointsDraw): number | null {
@@ -83,21 +69,147 @@ export function pointsNeeded(d?: PointsDraw): number | null {
   return d.summary.lowestSure ? pointsValue(d.summary.lowestSure) : null;
 }
 
-// "about 12 preference points", or for a draw that ran out below one point,
-// "1 preference point to be sure of drawing (2.1% of those with fewer drew)".
-// Null when anyone could draw.
-export function pointsNeededPhrase(d: PointsDraw): string | null {
-  const need = pointsNeeded(d);
-  if (need === null) return null;
-  const partial = d.summary.partial;
-  if (need < 1 && partial) return `1 preference point to be sure of drawing (${pct(partial.odds)} of those with fewer drew)`;
-  return `about ${preferencePoints(Math.ceil(need))}`;
+// Wyoming's nonresident licenses go 75% to the preference-point draw and 25%
+// to a random draw. Everyone who misses the point draw is entered in the
+// random draw (in every 2026 report the random draw's first-choice applicants
+// are exactly the point draw's unsuccessful applicants; the build script
+// checks this), so a hunter's real chance at a point level is the point-draw
+// result plus the random-draw chance for the rest. WGFD prints only the first.
+export interface CombinedRow {
+  points: string; // as WGFD prints it
+  applicants: number;
+  drew: number; // licenses issued in the point draw
+  printed: number; // WGFD's printed odds, percent: licenses left / applicants
+  combined: number; // 0..1, point draw plus random draw
 }
 
-// "nonresidents needed about 12 preference points", for headlines.
-export function pointsPhrase(d: PointsDraw): string {
-  const need = pointsNeededPhrase(d);
-  return need === null ? "nonresidents drew with any number of preference points" : `nonresidents needed ${need}`;
+export interface CombinedOdds {
+  applicants: number;
+  drew: number;
+  losers: number; // missed the point draw, so entered the random draw
+  randomQuota: number;
+  random: number | null; // 0..1 chance in the random draw; null when nobody missed
+  rows: CombinedRow[]; // point levels anyone applied at, highest first
+  cut: CombinedRow | null; // the level where the point draw ran out, if it ran out mid-level
+  sure: CombinedRow | null; // the lowest level where everyone drew in the point draw
+  floor: CombinedRow | null; // the lowest level anyone applied at
+}
+
+export function combinedOdds(p: PointsDraw, r?: DemandDraw): CombinedOdds {
+  const applied = p.rows.filter((x) => x.applicants > 0);
+  const applicants = applied.reduce((n, x) => n + x.applicants, 0);
+  const drew = applied.reduce((n, x) => n + x.issued, 0);
+  const losers = r ? r.first : applicants - drew;
+  const randomQuota = r?.quota ?? 0;
+  const random = losers > 0 ? Math.min(1, randomQuota / losers) : null;
+  // WGFD's printed odds at the cut level are licenses left over applicants;
+  // the issued count is what happened (sometimes more, likely parties drawn
+  // together), and it is what the random pool reconciles with.
+  const rows = applied.map((x) => {
+    const pd = x.issued / x.applicants;
+    return {
+      points: x.points,
+      applicants: x.applicants,
+      drew: x.issued,
+      printed: x.odds,
+      combined: pd + (1 - pd) * (random ?? 0),
+    };
+  });
+  const cut = rows.find((x) => x.drew > 0 && x.drew < x.applicants) ?? null;
+  const sure = [...rows].reverse().find((x) => x.drew === x.applicants) ?? null;
+  return { applicants, drew, losers, randomQuota, random, rows, cut, sure, floor: rows[rows.length - 1] ?? null };
+}
+
+// "about 30%" or, for long shots, "about 1 in 44" (counts read better than small percentages).
+export function chanceText(c: number): string {
+  if (c >= 0.995) return "a sure thing";
+  if (c >= 0.1) return `about ${Math.round(c * 100)}%`;
+  if (c <= 0) return "none";
+  const n = Math.round(1 / c);
+  return n > 1000 ? "under 1 in 1,000" : `about 1 in ${num.format(n)}`;
+}
+
+// The short form for table cells.
+export function chanceShort(c: number): string {
+  if (c >= 0.995) return "100%";
+  if (c >= 0.1) return `${Math.round(c * 100)}%`;
+  if (c <= 0) return "0";
+  const n = Math.round(1 / c);
+  return n > 1000 ? "<1 in 1,000" : `1 in ${num.format(n)}`;
+}
+
+const at = (x: CombinedRow) => points(pointsLabel(x.points));
+
+// The whole draw in plain language: point draw, random draw, and the two combined.
+export function combinedSentence(o: CombinedOdds): string {
+  if (o.applicants === 0) return "Nobody applied for it as a first choice.";
+  if (o.losers === 0) return `All ${num.format(o.applicants)} first-choice applicants drew in the point draw.`;
+  if (o.drew === 0 && o.randomQuota === 0) {
+    return `No licenses were available in either draw, so none of the ${num.format(o.applicants)} first-choice applicants drew.`;
+  }
+  const parts: string[] = [];
+  if (o.cut) {
+    parts.push(
+      `The point draw ran out at ${at(o.cut)}, where ${num.format(o.cut.drew)} of ${num.format(o.cut.applicants)} drew; everyone with more points drew.`
+    );
+  } else if (o.sure) {
+    parts.push(`Everyone with ${at(o.sure)} or more drew in the point draw; nobody below that did.`);
+  } else {
+    parts.push("Nobody drew in the point draw.");
+  }
+  if (o.randomQuota === 0) {
+    parts.push(`There were no random-draw licenses, so the ${num.format(o.losers)} who missed went home empty.`);
+    return parts.join(" ");
+  }
+  const lucky = Math.min(o.randomQuota, o.losers);
+  parts.push(
+    `The ${num.format(o.losers)} who missed went into the random draw, where ${num.format(lucky)} of them drew.`
+  );
+  const random = o.random ?? 0;
+  if (random >= 0.995) {
+    parts.push("Counting both draws, every applicant drew.");
+  } else if (o.cut && o.cut !== o.floor) {
+    parts.push(
+      `Counting both draws, a hunter at ${at(o.cut)} had a chance of ${chanceText(o.cut.combined)}, and one with fewer points ${chanceText(random)}.`
+    );
+  } else if (o.cut) {
+    // The draw ran out at the lowest level anyone applied at, so there is no "fewer".
+    parts.push(`Counting both draws, a hunter at ${at(o.cut)} had a chance of ${chanceText(o.cut.combined)}.`);
+  } else {
+    parts.push(
+      `Counting both draws, ${o.sure ? "a hunter below that" : "every applicant"} had a chance of ${chanceText(random)}.`
+    );
+  }
+  return parts.join(" ");
+}
+
+// For headlines: "nonresidents needed about 12 preference points; with fewer,
+// the random draw gave a chance of about 1 in 42".
+export function nonresidentPhrase(p: PointsDraw, r?: DemandDraw): string {
+  const o = combinedOdds(p, r);
+  if (o.applicants === 0) return "no nonresident applied for it as a first choice";
+  if (o.losers === 0) return "every nonresident who applied drew";
+  if (o.drew === 0 && o.randomQuota === 0) {
+    return `there were no nonresident licenses, though ${num.format(o.applicants)} nonresidents applied for it as a first choice`;
+  }
+  const need = pointsNeeded(p);
+  if (need === null || need < 1) {
+    if (o.floor && o.floor.combined >= 0.995) return "every nonresident who applied drew in the point or random draw";
+    return o.floor
+      ? `a nonresident with no preference points had a chance of ${chanceText(o.floor.combined)} across the point and random draws`
+      : "nonresidents drew with any number of preference points";
+  }
+  const base = `nonresidents needed about ${preferencePoints(Math.ceil(need))}`;
+  if (o.randomQuota === 0) return `${base}, and the random draw had no licenses`;
+  if ((o.random ?? 0) >= 0.995) return `${base}, and everyone with fewer drew in the random draw`;
+  return `${base}; with fewer, the random draw gave a chance of ${chanceText(o.random ?? 0)}`;
+}
+
+// A nonresident's chance with no points: the random draw alone, unless even
+// the lowest level drew in the point draw. Null when nobody applied.
+export function zeroPointChance(p?: PointsDraw, r?: DemandDraw): number | null {
+  if (!p) return null;
+  return combinedOdds(p, r).floor?.combined ?? null;
 }
 
 // Random and resident draws publish quota and applicant counts, not odds. If
@@ -112,6 +224,13 @@ export function chanceLabel(c: number | null): string {
   if (c >= 100) return "everyone drew";
   if (c < 1) return "under 1%";
   return `about ${Math.round(c)}%`;
+}
+
+// "In the 2026 draw for X," + ["nonresidents needed ...", "residents' odds ..."]
+// as "In the 2026 draw for X, nonresidents needed .... Residents' odds ...."
+export function sentences(lead: string, parts: string[]): string {
+  const [first, ...rest] = parts;
+  return [`${lead} ${first}.`, ...rest.map((x) => `${x[0].toUpperCase()}${x.slice(1)}.`)].join(" ");
 }
 
 export function oddsPhrase(who: "resident" | "nonresident", d: DemandDraw): string {

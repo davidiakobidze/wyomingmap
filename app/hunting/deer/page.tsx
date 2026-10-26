@@ -11,7 +11,7 @@ import {
   regionPath,
   seasonDates,
 } from "@/lib/deer";
-import { PointsDraw, chanceLabel, firstChoiceChance, marker, pointsNeeded } from "@/lib/hunts";
+import { PointsDraw, RegionDraws, chanceShort, marker, pointsNeeded, zeroPointChance } from "@/lib/hunts";
 import { SITE_NAME, SITE_URL, WYOMING_BOUNDS } from "@/lib/site";
 
 const title = `Wyoming deer hunt areas: ${DEER_YEAR} seasons, region draw odds and points, by area`;
@@ -28,6 +28,11 @@ function need(d?: PointsDraw) {
   if (!d) return "—";
   const n = pointsNeeded(d);
   return n === null ? "Any" : Math.ceil(n);
+}
+
+function zero(d: RegionDraws) {
+  const z = zeroPointChance(d.nrPoints, d.nrRandom);
+  return z === null ? "—" : chanceShort(z);
 }
 
 export default function DeerIndex() {
@@ -58,7 +63,7 @@ export default function DeerIndex() {
               <th>Region</th>
               <th>Areas</th>
               <th>Points needed</th>
-              <th>Random-draw odds</th>
+              <th>Chance with 0 points</th>
               <th>Special: points needed</th>
             </tr>
           </thead>
@@ -70,7 +75,7 @@ export default function DeerIndex() {
                 </td>
                 <td>{r.areas.length}</td>
                 <td>{need(r.draws.nrPoints)}</td>
-                <td>{r.draws.nrRandom ? chanceLabel(firstChoiceChance(r.draws.nrRandom)) : "—"}</td>
+                <td>{zero(r.draws)}</td>
                 <td>{need(r.draws.nrSpecialPoints)}</td>
               </tr>
             ))}
@@ -114,8 +119,8 @@ export default function DeerIndex() {
 
       <p className="fine">
         &ldquo;Points needed&rdquo; is the point level where the {DEER_YEAR} nonresident preference-point draw
-        ran out for the region&apos;s general license; at that level only some applicants drew. Random-draw odds
-        are licenses divided by first-choice applicants. The general season shown is each area&apos;s first; some
+        ran out for the region&apos;s general license; at that level only some applicants drew. The 0-point chance
+        counts the random draw, which everyone who misses the point draw goes into. The general season shown is each area&apos;s first; some
         have later white-tailed seasons. Sources: <a href={DEER_SOURCES.odds}>WGFD draw results and odds</a>,{" "}
         <a href={DEER_SOURCES.seasons}>WGFD Chapter 6 deer seasons</a>, and the{" "}
         <a href={DEER_SOURCES.boundaries}>WGFD deer hunt area boundaries</a>.
