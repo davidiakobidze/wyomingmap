@@ -1,10 +1,25 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import HuntAreaMap from "@/components/HuntAreaMap";
+import DrawBoard from "@/components/hunt/DrawBoard";
+import HuntMap from "@/components/hunt/HuntMap";
+import { Adjoining, Collar, Crumbs, Outfitters } from "@/components/hunt/Sheet";
 import { Demand, NonresidentDraws, OddsAssumptions } from "@/components/HuntDraws";
-import { ELK_AREAS, ELK_SOURCES, ELK_YEAR, ElkArea, ElkHunt, elkPath, elkSlug, getElkArea, mainHunt, neighbors } from "@/lib/elk";
+import {
+  ELK_AREAS,
+  ELK_SOURCES,
+  ELK_YEAR,
+  ElkArea,
+  ElkHunt,
+  elkLicenses,
+  elkPath,
+  elkSlug,
+  getElkArea,
+  mainHunt,
+  neighbors,
+} from "@/lib/elk";
 import { areaFeature, collection, marker, nonresidentPhrase, oddsPhrase, sentences } from "@/lib/hunts";
-import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { AreaOdds, oddsOf } from "@/lib/license";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const dynamicParams = false;
 
@@ -48,10 +63,10 @@ export function generateMetadata({ params }: { params: { area: string } }): Meta
 
 function Hunt({ h }: { h: ElkHunt }) {
   return (
-    <section className="hunt" id={`type-${h.type}`}>
-      <h2>
+    <section className="hs-hunt" id={`type-${h.type}`}>
+      <h3>
         Type {h.type} · {h.description}
-      </h2>
+      </h3>
       <ul className="draws">
         <NonresidentDraws d={h} />
         {h.nrCowCalf && <Demand label="Nonresident" d={h.nrCowCalf} />}
@@ -62,104 +77,120 @@ function Hunt({ h }: { h: ElkHunt }) {
   );
 }
 
+// The main license's nonresident odds for each area on the map, for the hover label.
+function mapOdds(areas: ElkArea[]): Record<number, AreaOdds> {
+  const out: Record<number, AreaOdds> = {};
+  areas.forEach((x) => {
+    const o = elkLicenses(x)[0] && oddsOf(elkLicenses(x)[0]);
+    if (o) out[x.area] = o;
+  });
+  return out;
+}
+
 export default function ElkAreaPage({ params }: { params: { area: string } }) {
   const a = getElkArea(params.area);
   if (!a) notFound();
   const near = neighbors(a);
   const shown = [a, ...near];
-  const mailto = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
-    `Outfitter listing: Elk Area ${a.area}`
-  )}&body=${encodeURIComponent("Outfitter name:\nWyoming outfitter license number:\nAreas you guide in:\nWebsite:\n")}`;
 
   return (
-    <main className="article wide">
-      <nav className="crumbs">
-        <a href="/">{SITE_NAME}</a> / <a href="/hunting/elk">Elk hunt areas</a> / Area {a.area}
-      </nav>
-      <h1>
-        Elk Hunt Area {a.area}: {a.name}
-      </h1>
-      <p className="lede">{headline(a)}</p>
-
-      <HuntAreaMap
-        areas={collection(shown.map((x) => areaFeature(x)))}
-        markers={shown.map(marker)}
-        bounds={a.bbox}
-        highlight={a.area}
-        hrefFor="/hunting/elk/area-{area}"
-      />
-
-      <dl className="facts">
-        <div>
-          <dt>Herd unit</dt>
-          <dd>
-            {a.herdName} ({a.herdUnit})
-          </dd>
+    <>
+      <Collar year={ELK_YEAR}>
+        <b>Elk hunt area {a.area}</b> · {a.region} region · Herd unit {a.herdUnit} · {num.format(a.sqMiles)} sq mi
+      </Collar>
+      <main className="hs-wrap">
+        <Crumbs items={[{ href: "/", label: SITE_NAME }, { href: "/hunting/elk", label: "Elk hunt areas" }, { label: `Area ${a.area}` }]} />
+        <div className="hs-head">
+          <div>
+            <h1>
+              <span className="kicker">
+                Elk hunt area {a.area} · {a.herdName} herd
+              </span>
+              {a.name}
+            </h1>
+            <p className="answer">{headline(a)}</p>
+          </div>
+          <Adjoining a={a} near={near} href={elkPath} />
         </div>
-        <div>
-          <dt>Size</dt>
-          <dd>{num.format(a.sqMiles)} sq mi</dd>
-        </div>
-        <div>
-          <dt>WGFD region</dt>
-          <dd>{a.region}</dd>
-        </div>
-        <div>
-          <dt>License types drawn</dt>
-          <dd>{a.hunts.length || "none"}</dd>
-        </div>
-      </dl>
 
-      {a.hunts.length === 0 ? (
-        <p>
-          Wyoming Game and Fish drew no limited-quota elk licenses for this area in {ELK_YEAR}. It may be
-          hunted on a general license or closed to elk hunting; the{" "}
-          <a href="https://wgfd.wyo.gov/regulations">WGFD elk regulations</a> say which.
-        </p>
-      ) : (
-        a.hunts.map((h) => <Hunt key={h.type} h={h} />)
-      )}
-      {a.hunts.some((h) => h.nrPoints) && <OddsAssumptions year={ELK_YEAR} />}
+        <DrawBoard
+          species="elk"
+          year={ELK_YEAR}
+          where={`Area ${a.area}`}
+          licenses={elkLicenses(a)}
+          map={
+            <HuntMap
+              species="elk"
+              areas={collection(shown.map((x) => areaFeature(x)))}
+              labels={shown.map(marker)}
+              bounds={a.bbox}
+              highlight={[a.area]}
+              hrefFor="/hunting/elk/area-{area}"
+              odds={mapOdds(shown)}
+              legend={`Area ${a.area}`}
+            />
+          }
+        />
 
-      <aside className="callout">
-        <h2>Outfitters licensed in Area {a.area}</h2>
-        <p>
-          Hunters reading this page are deciding where to apply. If you guide in Area {a.area}, you can be
-          listed here with your name, a photo, and a link to your site.
-        </p>
-        <a className="button" href={mailto}>
-          Get listed
-        </a>
-      </aside>
+        <section className="hs-sec">
+          <div className="sh">
+            <h2>Draw details</h2>
+            <p>Every {ELK_YEAR} draw for Area {a.area}, point level by point level.</p>
+          </div>
+          {a.hunts.length === 0 ? (
+            <p>
+              Wyoming Game and Fish drew no limited-quota elk licenses for this area in {ELK_YEAR}. It may be
+              hunted on a general license or closed to elk hunting; the{" "}
+              <a href="https://wgfd.wyo.gov/regulations">WGFD elk regulations</a> say which.
+            </p>
+          ) : (
+            <div className="hs-hunts">
+              {a.hunts.map((h) => (
+                <Hunt key={h.type} h={h} />
+              ))}
+            </div>
+          )}
+          {a.hunts.some((h) => h.nrPoints) && <OddsAssumptions year={ELK_YEAR} />}
+        </section>
 
-      {near.length > 0 && (
-        <>
-          <h2>Nearby elk areas</h2>
-          <ul className="nearby">
-            {near.map((n) => (
-              <li key={n.area}>
-                <a href={elkPath(n)}>
-                  Area {n.area}: {n.name}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+        <Outfitters where={`Area ${a.area}`} subject={`Outfitter listing: Elk Area ${a.area}`} />
 
-      <h2>How to read this</h2>
-      <p>
-        Odds are what happened in the {ELK_YEAR} draw, published by Wyoming Game and Fish. They are not a
-        forecast; quotas and applicant numbers change every year. A nonresident&apos;s chance counts both the
-        preference-point draw and the random draw that everyone who misses it goes into; WGFD&apos;s own tables
-        show only the first, so they understate it. Resident and cow/calf draws are random: the percentage shown
-        is licenses divided by first-choice applicants, before second and third choices.
-      </p>
-      <p className="fine">
-        Sources: <a href={ELK_SOURCES.odds}>WGFD draw results and odds</a> ({ELK_YEAR}) and the{" "}
-        <a href={ELK_SOURCES.boundaries}>WGFD elk hunt area boundaries</a>. Boundaries are for general location,
-        not a survey. Check season dates and boundary descriptions in the WGFD regulations before you hunt.
-      </p>
-    </main>
+        {near.length > 0 && (
+          <section className="hs-sec">
+            <div className="sh">
+              <h2>Nearby elk areas</h2>
+            </div>
+            <ul className="hs-nearby">
+              {near.map((n) => (
+                <li key={n.area}>
+                  <a href={elkPath(n)}>
+                    <b>{n.area}</b> {n.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <section className="hs-sec hs-read">
+          <div className="sh">
+            <h2>How to read this</h2>
+          </div>
+          <p>
+            Odds are what happened in the {ELK_YEAR} draw, published by Wyoming Game and Fish. They are not a
+            forecast; quotas and applicant numbers change every year. A nonresident&apos;s chance counts both the
+            preference-point draw and the random draw that everyone who misses it goes into; WGFD&apos;s own
+            tables show only the first, so they understate it. Resident and cow/calf draws are random: the
+            percentage shown is licenses divided by first-choice applicants, before second and third choices.
+          </p>
+          <p className="fine">
+            Sources: <a href={ELK_SOURCES.odds}>WGFD draw results and odds</a> ({ELK_YEAR}) and the{" "}
+            <a href={ELK_SOURCES.boundaries}>WGFD elk hunt area boundaries</a>. Terrain from the AWS Terrain Tiles
+            elevation set; base map from OpenStreetMap. Boundaries are for general location, not a survey. Check
+            season dates and boundary descriptions in the WGFD regulations before you hunt.
+          </p>
+        </section>
+      </main>
+    </>
   );
 }

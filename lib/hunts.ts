@@ -120,6 +120,36 @@ export function combinedOdds(p: PointsDraw, r?: DemandDraw): CombinedOdds {
   return { applicants, drew, losers, randomQuota, random, rows, cut, sure, floor: rows[rows.length - 1] ?? null };
 }
 
+// What a hunter's own point count decides in one draw, small enough to hand
+// to client components: the level where the point draw ran out and the chance
+// there, the lowest level where everyone drew, and the random-draw chance.
+// Point values are as pointsValue gives them, so "< 15" is 14.5.
+export interface PointsKey {
+  cut: number | null;
+  cutChance: number;
+  sure: number | null;
+  random: number;
+}
+
+// Null when nobody applied, so there is nothing to say about anyone's chance.
+export function pointsKey(o: CombinedOdds): PointsKey | null {
+  if (o.applicants === 0) return null;
+  if (o.losers === 0) return { cut: null, cutChance: 1, sure: 0, random: 1 };
+  return {
+    cut: o.cut ? pointsValue(o.cut.points) : null,
+    cutChance: o.cut?.combined ?? 0,
+    sure: o.sure ? pointsValue(o.sure.points) : null,
+    random: o.random ?? 0,
+  };
+}
+
+// A hunter with exactly `p` points (applying alone) in that draw: sure above
+// the cut, the cut level's chance at it, and the random draw below.
+export function chanceAt(k: PointsKey, p: number): number {
+  if (k.cut !== null) return p > k.cut ? 1 : p === k.cut ? k.cutChance : k.random;
+  return k.sure !== null && p >= k.sure ? 1 : k.random;
+}
+
 // "about 30%" or, for long shots, "about 1 in 44" (counts read better than small percentages).
 export function chanceText(c: number): string {
   if (c >= 0.995) return "a sure thing";

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import HuntAreaMap from "@/components/HuntAreaMap";
+import DrawBoard from "@/components/hunt/DrawBoard";
+import HuntMap from "@/components/hunt/HuntMap";
+import { Adjoining, Collar, Crumbs, Outfitters } from "@/components/hunt/Sheet";
 import { Demand, NonresidentDraws, OddsAssumptions } from "@/components/HuntDraws";
 import {
   DEER_REGIONS,
@@ -10,6 +12,7 @@ import {
   DeerHunt,
   DeerRegion,
   Season,
+  deerLicenses,
   deerPath,
   deerSlugs,
   getDeerPage,
@@ -17,6 +20,7 @@ import {
   herdNames,
   mainHunt,
   neighbors,
+  regionLicenses,
   regionPath,
   seasonDates,
 } from "@/lib/deer";
@@ -30,7 +34,8 @@ import {
   sentences,
   unionBounds,
 } from "@/lib/hunts";
-import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { AreaOdds, oddsOf } from "@/lib/license";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const dynamicParams = false;
 
@@ -137,7 +142,7 @@ function SeasonTable({ seasons, showQuota }: { seasons: Season[]; showQuota?: bo
 
 function Hunt({ h }: { h: DeerHunt }) {
   return (
-    <section className="hunt" id={`type-${h.type}`}>
+    <section className="hs-hunt" id={`type-${h.type}`}>
       <h3>
         Type {h.type} · {h.description}
       </h3>
@@ -152,28 +157,23 @@ function Hunt({ h }: { h: DeerHunt }) {
   );
 }
 
-function Outfitters({ where, subject }: { where: string; subject: string }) {
-  const mailto = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
-    "Outfitter name:\nWyoming outfitter license number:\nAreas you guide in:\nWebsite:\n"
-  )}`;
-  return (
-    <aside className="callout">
-      <h2>Outfitters licensed in {where}</h2>
-      <p>
-        Hunters reading this page are deciding where to apply. If you guide in {where}, you can be listed here
-        with your name, a photo, and a link to your site.
-      </p>
-      <a className="button" href={mailto}>
-        Get listed
-      </a>
-    </aside>
-  );
+// Each area's first license for a nonresident, for the map's hover labels.
+function mapOdds(areas: DeerArea[]): Record<number, AreaOdds> {
+  const out: Record<number, AreaOdds> = {};
+  areas.forEach((x) => {
+    const l = deerLicenses(x)[0];
+    const o = l && oddsOf(l);
+    if (o) out[x.area] = o;
+  });
+  return out;
 }
 
 function HowToRead() {
   return (
-    <>
-      <h2>How to read this</h2>
+    <section className="hs-sec hs-read">
+      <div className="sh">
+        <h2>How to read this</h2>
+      </div>
       <p>
         Draw results are what happened in the {DEER_YEAR} draw, published by Wyoming Game and Fish. They are not
         a forecast; quotas and applicant numbers change every year. A nonresident&apos;s chance counts both the
@@ -188,10 +188,30 @@ function HowToRead() {
       <p className="fine">
         Sources: <a href={DEER_SOURCES.odds}>WGFD draw results and odds</a> ({DEER_YEAR}),{" "}
         <a href={DEER_SOURCES.seasons}>WGFD Chapter 6 deer seasons</a>, and the{" "}
-        <a href={DEER_SOURCES.boundaries}>WGFD deer hunt area boundaries</a>. Boundaries on the map are for
-        general location, not a survey. Check the current regulations before you hunt.
+        <a href={DEER_SOURCES.boundaries}>WGFD deer hunt area boundaries</a>. Terrain from the AWS Terrain Tiles
+        elevation set; base map from OpenStreetMap. Boundaries on the map are for general location, not a survey.
+        Check the current regulations before you hunt.
       </p>
-    </>
+    </section>
+  );
+}
+
+function Nearby({ areas }: { areas: DeerArea[] }) {
+  return (
+    <section className="hs-sec">
+      <div className="sh">
+        <h2>Nearby deer areas</h2>
+      </div>
+      <ul className="hs-nearby">
+        {areas.map((n) => (
+          <li key={n.area}>
+            <a href={deerPath(n)}>
+              <b>{n.area}</b> {n.name}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -199,187 +219,206 @@ function AreaPage({ a }: { a: DeerArea }) {
   const near = neighbors(a);
   const shown = [a, ...near];
   const region = getRegion(a.region);
-  const herds = [
-    a.muleDeerHerd && { label: "Mule deer herd", h: a.muleDeerHerd },
-    a.whitetailHerd && { label: "White-tailed deer herd", h: a.whitetailHerd },
-  ].filter((x): x is { label: string; h: { unit: number; name: string } } => !!x);
+  const herds = [a.muleDeerHerd, a.whitetailHerd].filter((h, i, all): h is { unit: number; name: string } =>
+    !!h && all.findIndex((x) => x?.unit === h.unit) === i
+  );
 
   return (
-    <main className="article wide">
-      <nav className="crumbs">
-        <a href="/">{SITE_NAME}</a> / <a href="/hunting/deer">Deer hunt areas</a> / Area {a.area}
-      </nav>
-      <h1>
-        Deer Hunt Area {a.area}: {a.name}
-      </h1>
-      <p className="lede">{areaHeadline(a)}</p>
-
-      <HuntAreaMap
-        areas={collection(shown.map((x) => areaFeature(x)))}
-        markers={shown.map(marker)}
-        bounds={a.bbox}
-        highlight={a.area}
-        hrefFor="/hunting/deer/area-{area}"
-      />
-
-      <dl className="facts">
-        {herds.map(({ label, h }) => (
-          <div key={label}>
-            <dt>{label}</dt>
-            <dd>
-              {h.name} ({h.unit})
-            </dd>
+    <>
+      <Collar year={DEER_YEAR}>
+        <b>Deer hunt area {a.area}</b> · Region {a.region} ·{" "}
+        {herds.map((h) => `Herd unit ${h.unit}`).join(" · ")}
+        {herds.length ? " · " : ""}
+        {num.format(a.sqMiles)} sq mi
+      </Collar>
+      <main className="hs-wrap">
+        <Crumbs items={[{ href: "/", label: SITE_NAME }, { href: "/hunting/deer", label: "Deer hunt areas" }, { label: `Area ${a.area}` }]} />
+        <div className="hs-head">
+          <div>
+            <h1>
+              <span className="kicker">
+                Deer hunt area {a.area}
+                {herdNames(a) ? ` · ${herdNames(a)} herd` : ""}
+              </span>
+              {a.name}
+            </h1>
+            <p className="answer">{areaHeadline(a)}</p>
           </div>
-        ))}
-        <div>
-          <dt>Size</dt>
-          <dd>{num.format(a.sqMiles)} sq mi</dd>
+          <Adjoining a={a} near={near} href={deerPath} />
         </div>
-        <div>
-          <dt>Nonresident region</dt>
-          <dd>
-            <a href={regionPath(a.region)}>Region {a.region}</a>
-          </dd>
-        </div>
-      </dl>
 
-      {a.general.length > 0 && (
-        <section className="hunt" id="general">
-          <h2>General season</h2>
-          <p>
-            Residents hunt Area {a.area} on a general deer license. Nonresidents need the Region {a.region}{" "}
-            general license, which is drawn for the whole region and is good in the general seasons of{" "}
-            {region?.generalAreas.length} areas.
-          </p>
-          <SeasonTable seasons={a.general} />
-          {region && (
-            <>
-              <h3>
-                <a href={regionPath(a.region)}>Region {a.region} general license</a>, {DEER_YEAR} draw
-              </h3>
-              <ul className="draws">
-                <NonresidentDraws d={region.draws} />
-              </ul>
-            </>
+        <DrawBoard
+          species="deer"
+          year={DEER_YEAR}
+          where={`Area ${a.area}`}
+          licenses={a.closed ? [] : deerLicenses(a)}
+          map={
+            <HuntMap
+              species="deer"
+              areas={collection(shown.map((x) => areaFeature(x)))}
+              labels={shown.map(marker)}
+              bounds={a.bbox}
+              highlight={[a.area]}
+              hrefFor="/hunting/deer/area-{area}"
+              odds={mapOdds(shown)}
+              legend={`Area ${a.area}`}
+            />
+          }
+        />
+
+        <section className="hs-sec">
+          <div className="sh">
+            <h2>Seasons and draw details</h2>
+            <p>Every {DEER_YEAR} season and draw for Area {a.area}.</p>
+          </div>
+          {a.general.length > 0 && (
+            <section className="hs-hunt" id="general">
+              <h3>General season</h3>
+              <p>
+                Residents hunt Area {a.area} on a general deer license. Nonresidents need the{" "}
+                <a href={regionPath(a.region)}>Region {a.region} general license</a>, which is drawn for the whole
+                region and is good in the general seasons of {region?.generalAreas.length} areas.
+              </p>
+              <SeasonTable seasons={a.general} />
+              {region && (
+                <ul className="draws">
+                  <NonresidentDraws d={region.draws} />
+                </ul>
+              )}
+            </section>
+          )}
+          {a.hunts.length > 0 && (
+            <div className="hs-hunts">
+              {a.hunts.map((h) => (
+                <Hunt key={h.type} h={h} />
+              ))}
+            </div>
+          )}
+          {a.closed && <p>Deer Hunt Area {a.area} is closed to deer hunting in {DEER_YEAR}.</p>}
+          {!a.closed && a.general.length === 0 && a.hunts.length === 0 && (
+            <p>
+              No deer seasons are listed for this area in {DEER_YEAR}; the{" "}
+              <a href="https://wgfd.wyo.gov/regulations">WGFD deer regulations</a> have the details.
+            </p>
+          )}
+          {(a.general.length > 0 || a.hunts.some((h) => h.nrPoints)) && <OddsAssumptions year={DEER_YEAR} />}
+          {a.boundary && (
+            <details className="boundary">
+              <summary>Legal boundary description</summary>
+              <p>{a.boundary}</p>
+            </details>
           )}
         </section>
-      )}
 
-      {a.hunts.length > 0 && (
-        <>
-          <h2>Limited-quota licenses</h2>
-          {a.hunts.map((h) => (
-            <Hunt key={h.type} h={h} />
-          ))}
-        </>
-      )}
-
-      {!a.closed && a.general.length === 0 && a.hunts.length === 0 && (
-        <p>
-          No deer seasons are listed for this area in {DEER_YEAR}; the{" "}
-          <a href="https://wgfd.wyo.gov/regulations">WGFD deer regulations</a> have the details.
-        </p>
-      )}
-
-      {(a.general.length > 0 || a.hunts.some((h) => h.nrPoints)) && <OddsAssumptions year={DEER_YEAR} />}
-
-      {!a.closed && <Outfitters where={`Area ${a.area}`} subject={`Outfitter listing: Deer Area ${a.area}`} />}
-
-      {a.boundary && (
-        <details className="boundary">
-          <summary>Legal boundary description</summary>
-          <p>{a.boundary}</p>
-        </details>
-      )}
-
-      {near.length > 0 && (
-        <>
-          <h2>Nearby deer areas</h2>
-          <ul className="nearby">
-            {near.map((n) => (
-              <li key={n.area}>
-                <a href={deerPath(n)}>
-                  Area {n.area}: {n.name}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-
-      <HowToRead />
-    </main>
+        {!a.closed && <Outfitters where={`Area ${a.area}`} subject={`Outfitter listing: Deer Area ${a.area}`} />}
+        {near.length > 0 && <Nearby areas={near} />}
+        <HowToRead />
+      </main>
+    </>
   );
 }
 
 function RegionPage({ r }: { r: DeerRegion }) {
   return (
-    <main className="article wide">
-      <nav className="crumbs">
-        <a href="/">{SITE_NAME}</a> / <a href="/hunting/deer">Deer hunt areas</a> / Region {r.region}
-      </nav>
-      <h1>Deer Region {r.region}: nonresident general license</h1>
-      <p className="lede">{regionHeadline(r)}</p>
+    <>
+      <Collar year={DEER_YEAR}>
+        <b>Deer region {r.region}</b> · Nonresident general license · {r.areas.length} hunt areas ·{" "}
+        {r.generalAreas.length} with a general season
+      </Collar>
+      <main className="hs-wrap">
+        <Crumbs items={[{ href: "/", label: SITE_NAME }, { href: "/hunting/deer", label: "Deer hunt areas" }, { label: `Region ${r.region}` }]} />
+        <div className="hs-head">
+          <div>
+            <h1>
+              <span className="kicker">Deer · nonresident general license</span>
+              Region {r.region}
+            </h1>
+            <p className="answer">{regionHeadline(r)}</p>
+          </div>
+        </div>
 
-      <HuntAreaMap
-        areas={collection(r.areas.map((x) => areaFeature(x)))}
-        markers={r.areas.map(marker)}
-        bounds={unionBounds(r.areas)}
-        highlight={r.areas.map((x) => x.area)}
-        hrefFor="/hunting/deer/area-{area}"
-      />
+        <DrawBoard
+          species="deer"
+          year={DEER_YEAR}
+          where={`Region ${r.region}`}
+          licenses={regionLicenses(r)}
+          map={
+            <HuntMap
+              species="deer"
+              areas={collection(r.areas.map((x) => areaFeature(x)))}
+              labels={r.areas.map(marker)}
+              bounds={unionBounds(r.areas)}
+              highlight={r.areas.map((x) => x.area)}
+              hrefFor="/hunting/deer/area-{area}"
+              legend={`Region ${r.region}`}
+            />
+          }
+        />
 
-      <h2>{DEER_YEAR} draw</h2>
-      <ul className="draws">
-        <NonresidentDraws d={r.draws} />
-      </ul>
-      <OddsAssumptions year={DEER_YEAR} />
+        <section className="hs-sec">
+          <div className="sh">
+            <h2>{DEER_YEAR} draw details</h2>
+          </div>
+          <ul className="draws">
+            <NonresidentDraws d={r.draws} />
+          </ul>
+          <OddsAssumptions year={DEER_YEAR} />
+        </section>
 
-      <h2>Areas in Region {r.region}</h2>
-      <div className="table-scroll">
-        <table className="areas">
-          <thead>
-            <tr>
-              <th>Area</th>
-              <th>Name</th>
-              <th>General season</th>
-              <th>Legal deer</th>
-            </tr>
-          </thead>
-          <tbody>
-            {r.areas.map((a) => (
-              <tr key={a.area}>
-                <td>
-                  <a href={deerPath(a)}>{a.area}</a>
-                </td>
-                <td>
-                  <a href={deerPath(a)}>{a.name}</a>
-                </td>
-                <td>{a.closed ? "Closed" : a.general[0] ? seasonDates(a.general[0]) : "Draw only"}</td>
-                <td>{a.general[0]?.limitations ?? "—"}</td>
-              </tr>
+        <section className="hs-sec">
+          <div className="sh">
+            <h2>Areas in Region {r.region}</h2>
+            <p>
+              The first general season for each area; some have later white-tailed seasons. A region license is
+              not valid in draw-only areas.
+            </p>
+          </div>
+          <div className="table-scroll">
+            <table className="index">
+              <thead>
+                <tr>
+                  <th>Area</th>
+                  <th>Name</th>
+                  <th>General season</th>
+                  <th className="hide-sm">Legal deer</th>
+                </tr>
+              </thead>
+              <tbody>
+                {r.areas.map((a) => (
+                  <tr key={a.area}>
+                    <td className="area">{a.area}</td>
+                    <td className="name">
+                      <a href={deerPath(a)}>{a.name}</a>
+                    </td>
+                    <td>{a.closed ? "Closed" : a.general[0] ? seasonDates(a.general[0]) : "Draw only"}</td>
+                    <td className="hide-sm sub">{a.general[0]?.limitations ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <Outfitters where={`Region ${r.region}`} subject={`Outfitter listing: Deer Region ${r.region}`} />
+
+        <section className="hs-sec">
+          <div className="sh">
+            <h2>Other deer regions</h2>
+          </div>
+          <ul className="hs-nearby">
+            {DEER_REGIONS.filter((o) => o.region !== r.region).map((o) => (
+              <li key={o.region}>
+                <a href={regionPath(o.region)}>
+                  <b>{o.region}</b> Region {o.region}
+                </a>
+              </li>
             ))}
-          </tbody>
-        </table>
-      </div>
-      <p className="fine">
-        The first general season row for each area; some areas have later seasons for white-tailed deer. Areas
-        marked &ldquo;draw only&rdquo; have no general season, so a region license is not valid there.
-      </p>
+          </ul>
+        </section>
 
-      <Outfitters where={`Region ${r.region}`} subject={`Outfitter listing: Deer Region ${r.region}`} />
-
-      <h2>Other deer regions</h2>
-      <ul className="nearby">
-        {DEER_REGIONS.filter((o) => o.region !== r.region).map((o) => (
-          <li key={o.region}>
-            <a href={regionPath(o.region)}>Region {o.region}</a>
-          </li>
-        ))}
-      </ul>
-
-      <HowToRead />
-    </main>
+        <HowToRead />
+      </main>
+    </>
   );
 }
 

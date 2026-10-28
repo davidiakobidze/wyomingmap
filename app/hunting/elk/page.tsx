@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
-import HuntAreaMap from "@/components/HuntAreaMap";
-import { ELK_AREAS, ELK_SOURCES, ELK_YEAR, elkPath, mainHunt } from "@/lib/elk";
-import { chanceLabel, chanceShort, firstChoiceChance, marker, pointsNeeded, zeroPointChance } from "@/lib/hunts";
-import { SITE_NAME, SITE_URL, WYOMING_BOUNDS } from "@/lib/site";
+import AreaIndex, { IndexRow } from "@/components/hunt/AreaIndex";
+import HuntMap from "@/components/hunt/HuntMap";
+import { Collar } from "@/components/hunt/Sheet";
+import { ELK_AREAS, ELK_SOURCES, ELK_YEAR, elkLicenses, elkPath } from "@/lib/elk";
+import { marker } from "@/lib/hunts";
+import { AreaOdds, oddsOf, sureFrom } from "@/lib/license";
+import { SITE_URL, WYOMING_BOUNDS } from "@/lib/site";
 
 const title = `Wyoming elk hunt areas: ${ELK_YEAR} draw odds and points needed, by area`;
 const description = `All ${ELK_AREAS.length} Wyoming elk hunt areas on one map, with the preference points nonresidents needed and residents' odds in the ${ELK_YEAR} draw, from Wyoming Game and Fish's own reports.`;
@@ -15,77 +18,68 @@ export const metadata: Metadata = {
 };
 
 export default function ElkIndex() {
-  const rows = ELK_AREAS.map((a) => {
-    const h = mainHunt(a);
+  const odds: Record<number, AreaOdds> = {};
+  const rows: IndexRow[] = ELK_AREAS.map((a) => {
+    const l = elkLicenses(a)[0];
+    const o = l ? oddsOf(l) : null;
+    if (o) odds[a.area] = o;
     return {
-      a,
-      h,
-      need: h?.nrPoints ? pointsNeeded(h.nrPoints) : undefined,
-      zero: h?.nrPoints ? zeroPointChance(h.nrPoints, h.nrRandom) : null,
-      res: h?.resident ? firstChoiceChance(h.resident) : undefined,
+      key: String(a.area),
+      num: String(a.area),
+      name: a.name,
+      href: elkPath(a),
+      sub: `${a.herdName} herd`,
+      license: l ? `${l.kicker}, ${l.title.toLowerCase()}` : "None drawn",
+      need: sureFrom(o),
+      odds: o,
     };
   });
 
   return (
-    <main className="article wide">
-      <nav className="crumbs">
-        <a href="/">{SITE_NAME}</a> / Elk hunt areas
-      </nav>
-      <h1>Wyoming elk hunt areas</h1>
-      <p className="lede">
-        Every elk hunt area in Wyoming, with what it took to draw a license in {ELK_YEAR}: the preference
-        points nonresidents needed, and residents&apos; first-choice odds. Click an area on the map or in the
-        table for every license type, point by point.
-      </p>
+    <>
+      <Collar year={ELK_YEAR}>
+        <b>Wyoming elk</b> · {ELK_AREAS.length} hunt areas · {ELK_YEAR} draw results
+      </Collar>
+      <main className="hs-wrap">
+        <div className="hs-head">
+          <div>
+            <h1>
+              <span className="kicker">Index to the elk hunt sheets</span>
+              Elk hunt areas
+            </h1>
+            <p className="answer">
+              Every elk hunt area in Wyoming, shaded by your chance at its main license in the {ELK_YEAR} draw.
+              Set your elk points at the top and the map and table answer for you. Click an area for its sheet.
+            </p>
+          </div>
+        </div>
 
-      <HuntAreaMap
-        areasUrl="/data/elk-hunt-areas.geojson"
-        markers={ELK_AREAS.map(marker)}
-        bounds={WYOMING_BOUNDS}
-        hrefFor="/hunting/elk/area-{area}"
-      />
+        <HuntMap
+          species="elk"
+          areasUrl="/data/elk-hunt-areas.geojson"
+          labels={ELK_AREAS.map(marker)}
+          bounds={WYOMING_BOUNDS}
+          hrefFor="/hunting/elk/area-{area}"
+          odds={odds}
+          choropleth
+        />
 
-      <div className="table-scroll">
-        <table className="areas">
-          <thead>
-            <tr>
-              <th>Area</th>
-              <th>Name</th>
-              <th>Herd</th>
-              <th>Main license</th>
-              <th>Nonresident points needed</th>
-              <th>Nonresident chance with 0 points</th>
-              <th>Resident first-choice odds</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(({ a, h, need, zero, res }) => (
-              <tr key={a.area}>
-                <td>
-                  <a href={elkPath(a)}>{a.area}</a>
-                </td>
-                <td>
-                  <a href={elkPath(a)}>{a.name}</a>
-                </td>
-                <td>{a.herdName}</td>
-                <td>{h ? `Type ${h.type}, ${h.description.toLowerCase()}` : "None drawn"}</td>
-                <td>{need === undefined ? "—" : need === null ? "Any" : Math.ceil(need)}</td>
-                <td>{zero === null ? "—" : chanceShort(zero)}</td>
-                <td>{res === undefined ? "—" : chanceLabel(res)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+        <section className="hs-sec">
+          <div className="sh">
+            <h2>Every elk area</h2>
+            <p>The main any-elk license in each area, for a nonresident. Sort by your chance to find a tag.</p>
+          </div>
+          <AreaIndex species="elk" rows={rows} label="an elk area" />
+        </section>
 
-      <p className="fine">
-        &ldquo;Points needed&rdquo; is the point level where the {ELK_YEAR} nonresident preference-point draw ran
-        out for the area&apos;s main any-elk license; at that level only some applicants drew. The 0-point chance
-        counts the random draw, which everyone who misses the point draw goes into. Resident odds are
-        licenses divided by first-choice applicants. Sources:{" "}
-        <a href={ELK_SOURCES.odds}>WGFD draw results and odds</a> and the{" "}
-        <a href={ELK_SOURCES.boundaries}>WGFD elk hunt area boundaries</a>.
-      </p>
-    </main>
+        <p className="fine">
+          &ldquo;Points for a sure tag&rdquo; is the lowest whole number of preference points at which every
+          nonresident drew in the {ELK_YEAR} point draw. &ldquo;Your chance&rdquo; counts the point draw and the
+          random draw everyone who misses it goes into; for cow/calf licenses it is the random draw alone. Sources:{" "}
+          <a href={ELK_SOURCES.odds}>WGFD draw results and odds</a> and the{" "}
+          <a href={ELK_SOURCES.boundaries}>WGFD elk hunt area boundaries</a>.
+        </p>
+      </main>
+    </>
   );
 }
