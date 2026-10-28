@@ -163,9 +163,16 @@ export function chanceText(c: number): string {
 export function chanceShort(c: number): string {
   if (c >= 0.995) return "100%";
   if (c >= 0.1) return `${Math.round(c * 100)}%`;
-  if (c <= 0) return "0";
+  if (c <= 0) return "None";
   const n = Math.round(1 / c);
   return n > 1000 ? "<1 in 1,000" : `1 in ${num.format(n)}`;
+}
+
+// The headline form: "Sure", "35%", "1 in 44".
+export function chanceBig(c: number | null): string {
+  if (c === null) return "—";
+  if (c >= 0.995) return "Sure";
+  return chanceShort(c);
 }
 
 const at = (x: CombinedRow) => points(pointsLabel(x.points));
@@ -311,4 +318,9 @@ export function labelPoint(a: MapArea): { lat: number; lng: number } {
 
 export function marker(a: MapArea) {
   return { area: a.area, name: a.name, ...labelPoint(a) };
+}
+
+// "3 licenses in Area 7", over a sheet's draw board.
+export function licensesHeading(n: number, where: string): string {
+  return n === 0 ? `No licenses drawn in ${where}` : n === 1 ? `One license in ${where}` : `${n} licenses in ${where}`;
 }

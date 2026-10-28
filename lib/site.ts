@@ -1,6 +1,6 @@
 export const SITE_NAME = "Wyoming Map";
 export const SITE_URL = "https://wyomingmap.com";
-export const TAGLINE = "One view to understand Wyoming.";
+export const TAGLINE = "Wyoming elk and deer draw odds, by hunt area, at your own points.";
 
 // TODO(owner): replace with the real inbox before this goes live. Deliberately
 // not a personal address; sponsor mail should land somewhere shared.

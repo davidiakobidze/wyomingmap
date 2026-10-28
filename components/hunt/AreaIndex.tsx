@@ -49,7 +49,8 @@ export default function AreaIndex({ species, rows, label }: { species: Species; 
     });
   }, [rows, q, pts, sort]);
 
-  const th = (key: SortKey, text: string, cls?: string) => (
+  // `short` stands in for the heading on a phone, where the full one would push "Your chance" off screen.
+  const th = (key: SortKey, text: string, cls?: string, short?: string) => (
     <th className={cls} aria-sort={sort.key === key ? (sort.dir === 1 ? "ascending" : "descending") : undefined}>
       <button
         type="button"
@@ -57,7 +58,14 @@ export default function AreaIndex({ species, rows, label }: { species: Species; 
           setSort((s) => ({ key, dir: s.key === key ? (s.dir === 1 ? -1 : 1) : key === "chance" ? -1 : 1 }))
         }
       >
-        {text}
+        {short ? (
+          <>
+            <span className="wide-only">{text}</span>
+            <span className="narrow-only">{short}</span>
+          </>
+        ) : (
+          text
+        )}
         {sort.key === key ? (sort.dir === 1 ? " ↑" : " ↓") : ""}
       </button>
     </th>
@@ -84,8 +92,8 @@ export default function AreaIndex({ species, rows, label }: { species: Species; 
               {th("num", "No.")}
               {th("name", "Name")}
               <th className="hide-sm">Nonresident license</th>
-              {th("need", "Points for a sure tag", "num")}
-              {th("chance", "Your chance", "num")}
+              {th("need", "Points for a sure tag", "num", "Sure at")}
+              {th("chance", "Your chance", "num", "You")}
             </tr>
           </thead>
           <tbody>
