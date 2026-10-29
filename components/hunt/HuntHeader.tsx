@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { MAX_POINTS, setPoints, speciesOf, usePoints } from "@/lib/points";
+import { MAX_POINTS, savedPoints, setPoints, speciesOf, usePoints } from "@/lib/points";
+import { track } from "@/lib/track";
 
 // The masthead on every hunting page: the site, the species, and the one
 // input the whole page answers to, the hunter's own preference points.
@@ -17,6 +18,14 @@ export default function HuntHeader({ siteName }: { siteName: string }) {
     on();
     window.addEventListener("scroll", on, { passive: true });
     return () => window.removeEventListener("scroll", on);
+  }, []);
+  // A browser that already holds points has been here before. Sent on the
+  // next tick, once the analytics script further down the page is set up.
+  useEffect(() => {
+    const saved = savedPoints();
+    if (!saved) return;
+    const t = setTimeout(() => track("returning", saved));
+    return () => clearTimeout(t);
   }, []);
   const nav = [
     { href: "/hunting/elk", label: "Elk" },

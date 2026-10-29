@@ -4,7 +4,7 @@ import AreaHero from "@/components/hunt/AreaHero";
 import DrawBoard from "@/components/hunt/DrawBoard";
 import HuntMap from "@/components/hunt/HuntMap";
 import SeasonTable from "@/components/hunt/SeasonTable";
-import { Around, Outfitters } from "@/components/hunt/Sheet";
+import { Alerts, Around, Outfitters } from "@/components/hunt/Sheet";
 import { Demand, NonresidentDraws, OddsAssumptions } from "@/components/HuntDraws";
 import {
   ELK_AREAS,
@@ -167,6 +167,8 @@ export default function ElkAreaPage({ params }: { params: { area: string } }) {
             }
           />
         </section>
+
+        <Alerts where={`Elk Area ${a.area}`} />
 
         <section className="hs-sec" id="details">
           <div className="sh">

@@ -1,4 +1,6 @@
 import { CONTACT_EMAIL } from "@/lib/site";
+import AlertForm from "./AlertForm";
+import OutfitterLink from "./OutfitterLink";
 import { MapArea, labelPoint } from "@/lib/hunts";
 
 // Server-rendered pieces of a hunt sheet: the collar along the top edge, the
@@ -128,9 +130,14 @@ export function Outfitters({ where, subject }: { where: string; subject: string 
           with your name, a photo and a link to your site.
         </p>
       </div>
-      <a className="hs-btn dark" href={mailto}>
-        Get listed
-      </a>
+      <OutfitterLink href={mailto} where={where} />
     </aside>
   );
+}
+
+// The deadline and results-day signup. It shows only once the email service
+// is connected, so the live site never offers a form that can't deliver.
+export function Alerts({ where }: { where: string }) {
+  if (!process.env.RESEND_API_KEY || !process.env.RESEND_SEGMENT_ID) return null;
+  return <AlertForm where={where} />;
 }

@@ -4,6 +4,7 @@ import DawnHero from "@/components/hunt/DawnHero";
 import HeroOdds from "@/components/hunt/HeroOdds";
 import HuntMap from "@/components/hunt/HuntMap";
 import PointsDraw from "@/components/hunt/PointsDraw";
+import { Alerts } from "@/components/hunt/Sheet";
 import ReachCards, { ReachRow } from "@/components/hunt/ReachCards";
 import { DEER_AREAS, DEER_REGIONS, deerPath, herdNames, regionPath } from "@/lib/deer";
 import { ELK_AREAS, ELK_YEAR, elkLicenses, elkPath } from "@/lib/elk";
@@ -112,6 +113,7 @@ export default function Home() {
             <p className="fl-more">
               <a href={elkPath(show)}>Open the Area {show.area} sheet →</a>
             </p>
+            <Alerts where="Home" />
           </div>
         </div>
 
