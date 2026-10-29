@@ -1,5 +1,7 @@
+import JsonLd from "@/components/JsonLd";
 import { CONTACT_EMAIL } from "@/lib/site";
 import { MapArea, labelPoint } from "@/lib/hunts";
+import { breadcrumbs } from "@/lib/seo";
 
 // Server-rendered pieces of a hunt sheet: the collar along the top edge, the
 // adjoining-areas key, and the outfitter listing.
@@ -22,6 +24,7 @@ export function Crumbs({ items }: { items: { href?: string; label: string }[] })
           {x.href ? <a href={x.href}>{x.label}</a> : x.label}
         </span>
       ))}
+      <JsonLd data={breadcrumbs(items)} />
     </nav>
   );
 }

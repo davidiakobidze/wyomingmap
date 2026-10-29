@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import JsonLd from "@/components/JsonLd";
 import AreaIndex, { IndexRow } from "@/components/hunt/AreaIndex";
 import HuntMap from "@/components/hunt/HuntMap";
 import { Collar } from "@/components/hunt/Sheet";
@@ -15,9 +16,10 @@ import {
 } from "@/lib/deer";
 import { marker, seasonDates } from "@/lib/hunts";
 import { AreaOdds, oddsOf, sureFrom } from "@/lib/license";
-import { SITE_URL, WYOMING_BOUNDS } from "@/lib/site";
+import { breadcrumbs, huntDataset } from "@/lib/seo";
+import { SITE_NAME, SITE_URL, WYOMING_BOUNDS } from "@/lib/site";
 
-const title = `Wyoming deer hunt areas: ${DEER_YEAR} seasons, region draw odds and points, by area`;
+const title = `Wyoming Deer Hunt Area Map: ${DEER_YEAR} Seasons, Region Draw Odds and Points`;
 const description = `All ${DEER_AREAS.length} Wyoming deer hunt areas and ${DEER_REGIONS.length} nonresident regions on one map, with ${DEER_YEAR} general season dates and the preference points nonresidents needed, from Wyoming Game and Fish's own reports.`;
 
 export const metadata: Metadata = {
@@ -63,6 +65,22 @@ export default function DeerIndex() {
 
   return (
     <>
+      <JsonLd
+        data={{
+          "@graph": [
+            breadcrumbs([{ href: "/", label: SITE_NAME }, { label: "Deer hunt areas" }]),
+            huntDataset({
+              path: "/hunting/deer",
+              name: `Wyoming deer hunt areas and regions: ${DEER_YEAR} draw odds and seasons`,
+              description,
+              year: DEER_YEAR,
+              sources: [DEER_SOURCES.odds, DEER_SOURCES.seasons, DEER_SOURCES.boundaries],
+              geojson: "/data/deer-hunt-areas.geojson",
+              measures: ["Preference points needed", "Licenses issued", "Applicants", "Season dates", "Quota"],
+            }),
+          ],
+        }}
+      />
       <Collar year={DEER_YEAR}>
         <b>Wyoming deer</b> · {DEER_AREAS.length} hunt areas · {DEER_REGIONS.length} nonresident regions ·{" "}
         {DEER_YEAR} seasons and draw
@@ -72,7 +90,7 @@ export default function DeerIndex() {
           <div>
             <h1>
               <span className="kicker">Index to the deer hunt sheets</span>
-              Deer hunt areas
+              Wyoming deer hunt areas
             </h1>
             <p className="answer">
               Most Wyoming deer areas open on a general license, which nonresidents draw by region. The map shades
