@@ -34,10 +34,13 @@ export default function Home() {
   const odds: Record<number, AreaOdds> = {};
   const reach: ReachRow[] = [];
   ELK_AREAS.forEach((a) => {
-    const l = elkLicenses(a)[0];
+    const ls = elkLicenses(a);
+    const first = ls[0] && oddsOf(ls[0]);
+    if (first) odds[a.area] = first;
+    // The cards name an area's own tags, so they skip the region general license.
+    const l = ls.find((x) => x.id !== "general");
     const o = l ? oddsOf(l) : null;
-    if (!o) return;
-    odds[a.area] = o;
+    if (!l || !o) return;
     const need = sureFrom(o);
     if ("k" in o && need !== undefined)
       reach.push({ num: String(a.area), name: a.name, sub: `${a.herdName} herd · ${l.kicker}`, href: elkPath(a), odds: o, need });

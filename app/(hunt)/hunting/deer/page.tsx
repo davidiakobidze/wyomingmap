@@ -12,9 +12,8 @@ import {
   herdNames,
   regionLicenses,
   regionPath,
-  seasonDates,
 } from "@/lib/deer";
-import { marker } from "@/lib/hunts";
+import { marker, seasonDates } from "@/lib/hunts";
 import { AreaOdds, oddsOf, sureFrom } from "@/lib/license";
 import { SITE_URL, WYOMING_BOUNDS } from "@/lib/site";
 

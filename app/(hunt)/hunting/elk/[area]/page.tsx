@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import AreaHero from "@/components/hunt/AreaHero";
 import DrawBoard from "@/components/hunt/DrawBoard";
 import HuntMap from "@/components/hunt/HuntMap";
+import SeasonTable from "@/components/hunt/SeasonTable";
 import { Alerts, Around, Outfitters } from "@/components/hunt/Sheet";
 import { Demand, NonresidentDraws, OddsAssumptions } from "@/components/HuntDraws";
 import {
@@ -17,8 +18,18 @@ import {
   getElkArea,
   mainHunt,
   neighbors,
+  regionDraws,
 } from "@/lib/elk";
-import { areaFeature, collection, licensesHeading, marker, nonresidentPhrase, oddsPhrase, sentences } from "@/lib/hunts";
+import {
+  areaFeature,
+  collection,
+  licensesHeading,
+  marker,
+  nonresidentPhrase,
+  oddsPhrase,
+  seasonDates,
+  sentences,
+} from "@/lib/hunts";
 import { AreaOdds, oddsOf } from "@/lib/license";
 import { SITE_URL } from "@/lib/site";
 
@@ -30,10 +41,21 @@ export function generateStaticParams() {
 
 const num = new Intl.NumberFormat("en-US");
 
-// The two numbers people search for: what a nonresident needs in points (and
-// their chance without them) and what a resident's odds were, for the area's
-// main any-elk hunt.
+// What people search for, in one or two sentences. In a general-season area:
+// when the season is and the region license a nonresident needs. Elsewhere,
+// what a nonresident needs in points (and their chance without them) and what
+// a resident's odds were, for the area's main any-elk hunt.
 function headline(a: ElkArea): string {
+  if (a.closed) return `Elk Hunt Area ${a.area} is closed to elk hunting in ${ELK_YEAR}.`;
+  if (a.general.length > 0) {
+    const g = a.general[0];
+    const d = regionDraws(a);
+    return (
+      `Area ${a.area} is open on a general elk license: the ${ELK_YEAR} general season runs ${seasonDates(g)} ` +
+      `for ${g.limitations[0].toLowerCase()}${g.limitations.slice(1)}. Nonresidents need ${/^[AEIOU]/.test(a.region) ? "an" : "a"} ${a.region} region general license.` +
+      (d?.nrPoints ? ` In the ${ELK_YEAR} draw for it, ${nonresidentPhrase(d.nrPoints, d.nrRandom)}.` : "")
+    );
+  }
   const h = mainHunt(a);
   if (!h) return `No limited-quota elk licenses were drawn for Area ${a.area} in ${ELK_YEAR}.`;
   const parts: string[] = [];
@@ -52,8 +74,10 @@ export function generateMetadata({ params }: { params: { area: string } }): Meta
   const a = getElkArea(params.area);
   if (!a) return {};
   const url = `${SITE_URL}${elkPath(a)}`;
-  const title = `Wyoming Elk Area ${a.area} (${a.name}): ${ELK_YEAR} draw odds, points and map`;
-  const description = `${headline(a)} Every license type for Elk Hunt Area ${a.area}, the ${a.herdName} herd, with preference-point odds and the area boundary on a map.`;
+  const title = `Wyoming Elk Area ${a.area} (${a.name}): ${ELK_YEAR} draw odds, seasons and map`;
+  const description = a.closed
+    ? `${headline(a)} The area boundary on a map, and its legal description.`
+    : `${headline(a)} Season dates and every license type for Elk Hunt Area ${a.area}, the ${a.herdName} herd, with preference-point odds and the area boundary on a map.`;
   return {
     title: { absolute: title },
     description,
@@ -68,6 +92,7 @@ function Hunt({ h }: { h: ElkHunt }) {
       <h3>
         Type {h.type} · {h.description}
       </h3>
+      {h.seasons.length > 0 && <SeasonTable seasons={h.seasons} game="elk" showQuota />}
       <ul className="draws">
         <NonresidentDraws d={h} />
         {h.nrCowCalf && <Demand label="Nonresident" d={h.nrCowCalf} />}
@@ -93,7 +118,8 @@ export default function ElkAreaPage({ params }: { params: { area: string } }) {
   if (!a) notFound();
   const near = neighbors(a);
   const shown = [a, ...near];
-  const licenses = elkLicenses(a);
+  const licenses = a.closed ? [] : elkLicenses(a);
+  const region = regionDraws(a);
 
   return (
     <>
@@ -108,7 +134,11 @@ export default function ElkAreaPage({ params }: { params: { area: string } }) {
         num={String(a.area)}
         facts={`Elk hunt area ${a.area} · ${a.region} region · herd unit ${a.herdUnit} · ${num.format(a.sqMiles)} sq mi`}
         license={licenses[0]}
-        none={`Wyoming Game and Fish drew no limited-quota elk licenses for Area ${a.area} in ${ELK_YEAR}.`}
+        none={
+          a.closed
+            ? `Area ${a.area} is closed to elk hunting in ${ELK_YEAR}.`
+            : `Wyoming Game and Fish drew no elk licenses for Area ${a.area} in ${ELK_YEAR}.`
+        }
       />
       <main className="hs-wrap">
         <section className="hs-sec" id="licenses">
@@ -142,27 +172,50 @@ export default function ElkAreaPage({ params }: { params: { area: string } }) {
 
         <section className="hs-sec" id="details">
           <div className="sh">
-            <h2>Draw details</h2>
-            <p>Every {ELK_YEAR} draw for Area {a.area}, point level by point level.</p>
+            <h2>Seasons and draw details</h2>
+            <p>Every {ELK_YEAR} season and draw for Area {a.area}.</p>
           </div>
-          {a.hunts.length === 0 ? (
-            <p>
-              Wyoming Game and Fish drew no limited-quota elk licenses for this area in {ELK_YEAR}. It may be
-              hunted on a general license or closed to elk hunting; the{" "}
-              <a href="https://wgfd.wyo.gov/regulations">WGFD elk regulations</a> say which.
-            </p>
-          ) : (
+          {a.general.length > 0 && (
+            <section className="hs-hunt" id="general">
+              <h3>General season</h3>
+              <p>
+                Residents hunt Area {a.area} on a general elk license. Nonresidents need the {a.region} region
+                general license, which is drawn for the whole region and is good in the general season of every
+                area in it that has one.
+              </p>
+              <SeasonTable seasons={a.general} game="elk" />
+              {region && (
+                <ul className="draws">
+                  <NonresidentDraws d={region} />
+                </ul>
+              )}
+            </section>
+          )}
+          {a.hunts.length > 0 && (
             <div className="hs-hunts">
               {a.hunts.map((h) => (
                 <Hunt key={h.type} h={h} />
               ))}
             </div>
           )}
-          {a.hunts.some((h) => h.nrPoints) && <OddsAssumptions year={ELK_YEAR} />}
+          {a.closed && <p>Elk Hunt Area {a.area} is closed to elk hunting in {ELK_YEAR}.</p>}
+          {!a.closed && a.general.length === 0 && a.hunts.length === 0 && (
+            <p>
+              No elk seasons are listed for this area in {ELK_YEAR}; the{" "}
+              <a href="https://wgfd.wyo.gov/regulations">WGFD elk regulations</a> have the details.
+            </p>
+          )}
+          {(a.general.length > 0 || a.hunts.some((h) => h.nrPoints)) && <OddsAssumptions year={ELK_YEAR} />}
+          {a.boundary && (
+            <details className="boundary">
+              <summary>Legal boundary description</summary>
+              <p>{a.boundary}</p>
+            </details>
+          )}
         </section>
 
         <Around a={a} near={near} href={elkPath} species="elk" />
-        <Outfitters where={`Area ${a.area}`} subject={`Outfitter listing: Elk Area ${a.area}`} />
+        {!a.closed && <Outfitters where={`Area ${a.area}`} subject={`Outfitter listing: Elk Area ${a.area}`} />}
 
         <section className="hs-sec hs-read">
           <div className="sh">
@@ -175,11 +228,16 @@ export default function ElkAreaPage({ params }: { params: { area: string } }) {
             tables show only the first, so they understate it. Resident and cow/calf draws are random: the
             percentage shown is licenses divided by first-choice applicants, before second and third choices.
           </p>
+          <p>
+            Season dates and legal elk are from WGFD Chapter 7, Elk Hunting Seasons. Where a draw report and the
+            regulation describe a license differently, this page uses the regulation&apos;s wording.
+          </p>
           <p className="fine">
-            Sources: <a href={ELK_SOURCES.odds}>WGFD draw results and odds</a> ({ELK_YEAR}) and the{" "}
+            Sources: <a href={ELK_SOURCES.odds}>WGFD draw results and odds</a> ({ELK_YEAR}),{" "}
+            <a href={ELK_SOURCES.seasons}>WGFD Chapter 7 elk seasons</a>, and the{" "}
             <a href={ELK_SOURCES.boundaries}>WGFD elk hunt area boundaries</a>. Terrain from the AWS Terrain Tiles
-            elevation set; base map from OpenStreetMap. Boundaries are for general location, not a survey. Check
-            season dates and boundary descriptions in the WGFD regulations before you hunt.
+            elevation set; base map from OpenStreetMap. Boundaries on the map are for general location, not a
+            survey. Check the current regulations before you hunt.
           </p>
         </section>
       </main>
