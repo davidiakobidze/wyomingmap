@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import AreaHero from "@/components/hunt/AreaHero";
 import DrawBoard from "@/components/hunt/DrawBoard";
 import HuntMap from "@/components/hunt/HuntMap";
+import SeasonTable from "@/components/hunt/SeasonTable";
 import { Around, Outfitters } from "@/components/hunt/Sheet";
 import { Demand, NonresidentDraws, OddsAssumptions } from "@/components/HuntDraws";
 import {
@@ -12,7 +13,6 @@ import {
   DeerArea,
   DeerHunt,
   DeerRegion,
-  Season,
   deerLicenses,
   deerPath,
   deerSlugs,
@@ -23,7 +23,6 @@ import {
   neighbors,
   regionLicenses,
   regionPath,
-  seasonDates,
 } from "@/lib/deer";
 import {
   RegionDraws,
@@ -33,6 +32,7 @@ import {
   marker,
   nonresidentPhrase,
   oddsPhrase,
+  seasonDates,
   sentences,
   unionBounds,
 } from "@/lib/hunts";
@@ -115,40 +115,13 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   };
 }
 
-function SeasonTable({ seasons, showQuota }: { seasons: Season[]; showQuota?: boolean }) {
-  return (
-    <div className="table-scroll">
-      <table className="seasons">
-        <thead>
-          <tr>
-            <th>Season</th>
-            <th>Special archery</th>
-            {showQuota && <th>Quota</th>}
-            <th>Legal deer</th>
-          </tr>
-        </thead>
-        <tbody>
-          {seasons.map((s, i) => (
-            <tr key={i}>
-              <td>{seasonDates(s)}</td>
-              <td>{s.archery ? `${s.archery[0]} to ${s.archery[1]}` : "—"}</td>
-              {showQuota && <td>{typeof s.quota === "number" ? num.format(s.quota) : s.quota ?? "—"}</td>}
-              <td>{s.limitations}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 function Hunt({ h }: { h: DeerHunt }) {
   return (
     <section className="hs-hunt" id={`type-${h.type}`}>
       <h3>
         Type {h.type} · {h.description}
       </h3>
-      {h.seasons.length > 0 && <SeasonTable seasons={h.seasons} showQuota />}
+      {h.seasons.length > 0 && <SeasonTable seasons={h.seasons} game="deer" showQuota />}
       <ul className="draws">
         <NonresidentDraws d={h} />
         {h.nrDoeFawn && <Demand label="Nonresident" d={h.nrDoeFawn} />}
@@ -273,7 +246,7 @@ function AreaPage({ a }: { a: DeerArea }) {
                 <a href={regionPath(a.region)}>Region {a.region} general license</a>, which is drawn for the whole
                 region and is good in the general seasons of {region?.generalAreas.length} areas.
               </p>
-              <SeasonTable seasons={a.general} />
+              <SeasonTable seasons={a.general} game="deer" />
               {region && (
                 <ul className="draws">
                   <NonresidentDraws d={region.draws} />

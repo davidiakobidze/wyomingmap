@@ -29,6 +29,19 @@ export interface DemandDraw {
   third: number;
 }
 
+// One row of a WGFD season regulation (Chapter 6 deer, Chapter 7 elk).
+export interface Season {
+  archery: [string, string] | null; // special archery opens, closes
+  opens: string; // "Oct. 1"
+  closes: string;
+  quota: number | "Unlimited" | null; // null on general seasons and follow-on rows of a type
+  limitations: string; // what the license allows, in the regulation's words
+}
+
+export function seasonDates(s: Season): string {
+  return `${s.opens} to ${s.closes}`;
+}
+
 // Nonresident general licenses, drawn by region rather than by area.
 export interface RegionDraws {
   nrPoints?: PointsDraw;
