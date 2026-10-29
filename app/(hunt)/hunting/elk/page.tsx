@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
+import JsonLd from "@/components/JsonLd";
 import AreaIndex, { IndexRow } from "@/components/hunt/AreaIndex";
 import HuntMap from "@/components/hunt/HuntMap";
 import { Collar } from "@/components/hunt/Sheet";
 import { ELK_AREAS, ELK_SOURCES, ELK_YEAR, elkLicenses, elkPath } from "@/lib/elk";
 import { marker, seasonDates } from "@/lib/hunts";
 import { AreaOdds, oddsOf, sureFrom } from "@/lib/license";
-import { SITE_URL, WYOMING_BOUNDS } from "@/lib/site";
+import { breadcrumbs, huntDataset } from "@/lib/seo";
+import { SITE_NAME, SITE_URL, WYOMING_BOUNDS } from "@/lib/site";
 
-const title = `Wyoming elk hunt areas: ${ELK_YEAR} draw odds and points needed, by area`;
-const description = `All ${ELK_AREAS.length} Wyoming elk hunt areas on one map, with the preference points nonresidents needed and residents' odds in the ${ELK_YEAR} draw, from Wyoming Game and Fish's own reports.`;
+const title = `Wyoming Elk Hunt Area Map: ${ELK_YEAR} Draw Odds, Seasons and Points Needed`;
+const description = `All ${ELK_AREAS.length} Wyoming elk hunt areas on one map, with ${ELK_YEAR} seasons, the preference points nonresidents needed and residents' odds in the ${ELK_YEAR} draw, from Wyoming Game and Fish's own reports.`;
 
 export const metadata: Metadata = {
   title: { absolute: title },
@@ -37,6 +39,22 @@ export default function ElkIndex() {
 
   return (
     <>
+      <JsonLd
+        data={{
+          "@graph": [
+            breadcrumbs([{ href: "/", label: SITE_NAME }, { label: "Elk hunt areas" }]),
+            huntDataset({
+              path: "/hunting/elk",
+              name: `Wyoming elk hunt areas: ${ELK_YEAR} draw odds and seasons`,
+              description,
+              year: ELK_YEAR,
+              sources: [ELK_SOURCES.odds, ELK_SOURCES.seasons, ELK_SOURCES.boundaries],
+              geojson: "/data/elk-hunt-areas.geojson",
+              measures: ["Preference points needed", "Licenses issued", "Applicants", "Season dates", "Quota"],
+            }),
+          ],
+        }}
+      />
       <Collar year={ELK_YEAR}>
         <b>Wyoming elk</b> · {ELK_AREAS.length} hunt areas · {ELK_YEAR} draw results
       </Collar>
@@ -45,7 +63,7 @@ export default function ElkIndex() {
           <div>
             <h1>
               <span className="kicker">Index to the elk hunt sheets</span>
-              Elk hunt areas
+              Wyoming elk hunt areas
             </h1>
             <p className="answer">
               Every elk hunt area in Wyoming, shaded by your chance at its main license in the {ELK_YEAR} draw.

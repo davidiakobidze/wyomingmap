@@ -85,10 +85,13 @@ html.lenis, html.lenis body { height: auto; }
 .fl-copy { position: absolute; left: var(--gutter); bottom: 13vh; max-width: 780px; padding-right: var(--gutter); }
 .fl-kicker { font: 12px var(--mono); letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); }
 /* .hs h1 sets the sheet headings; the hero's needs to outrank it. */
-.hs .fl-copy h1 {
+.hs .fl-copy h1, .hs .fl-copy .fl-headline {
   font: 300 clamp(48px, 8vw, 128px)/1 var(--serif); letter-spacing: -0.035em; margin: 16px 0 28px;
   font-variation-settings: "SOFT" 100, "opsz" 144;
 }
+/* On the homepage the kicker is the h1, since it holds the words people
+   search for; the big line under it is display type. */
+.hs .fl-copy h1.fl-kicker { font: 12px var(--mono); letter-spacing: 0.18em; margin: 0; font-variation-settings: normal; }
 .hs .fl-copy h1.area { font-size: clamp(48px, 7vw, 112px); margin-bottom: 22px; }
 .fl-copy .fl-lede { max-width: 640px; }
 .fl-lede { font-size: clamp(16px, 1.45vw, 19px); color: var(--snow-2); max-width: 560px; margin: 0; }
