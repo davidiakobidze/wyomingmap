@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import AreaHero from "@/components/hunt/AreaHero";
 import DrawBoard from "@/components/hunt/DrawBoard";
 import HuntMap from "@/components/hunt/HuntMap";
-import { Around, Outfitters } from "@/components/hunt/Sheet";
+import { Alerts, Around, Outfitters } from "@/components/hunt/Sheet";
 import { Demand, NonresidentDraws, OddsAssumptions } from "@/components/HuntDraws";
 import {
   DEER_REGIONS,
@@ -260,6 +260,8 @@ function AreaPage({ a }: { a: DeerArea }) {
           />
         </section>
 
+        <Alerts where={`Deer Area ${a.area}`} />
+
         <section className="hs-sec" id="details">
           <div className="sh">
             <h2>Seasons and draw details</h2>
@@ -357,6 +359,8 @@ function RegionPage({ r }: { r: DeerRegion }) {
             }
           />
         </section>
+
+        <Alerts where={`Deer Region ${r.region}`} />
 
         <section className="hs-sec" id="details">
           <div className="sh">

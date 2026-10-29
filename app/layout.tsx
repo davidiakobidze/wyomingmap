@@ -19,6 +19,9 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     type: "website",
   },
+  // Google Search Console's HTML-tag check, for a URL-prefix property. A
+  // domain property verified by a DNS record at GoDaddy needs nothing here.
+  verification: process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : undefined,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
