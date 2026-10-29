@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import AreaHero from "@/components/hunt/AreaHero";
 import DrawBoard from "@/components/hunt/DrawBoard";
 import HuntMap from "@/components/hunt/HuntMap";
-import { Adjoining, Collar, Crumbs, Outfitters } from "@/components/hunt/Sheet";
+import { Around, Outfitters } from "@/components/hunt/Sheet";
 import { Demand, NonresidentDraws, OddsAssumptions } from "@/components/HuntDraws";
 import {
   DEER_REGIONS,
@@ -28,6 +29,7 @@ import {
   RegionDraws,
   areaFeature,
   collection,
+  licensesHeading,
   marker,
   nonresidentPhrase,
   oddsPhrase,
@@ -35,7 +37,7 @@ import {
   unionBounds,
 } from "@/lib/hunts";
 import { AreaOdds, oddsOf } from "@/lib/license";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/lib/site";
 
 export const dynamicParams = false;
 
@@ -196,25 +198,6 @@ function HowToRead() {
   );
 }
 
-function Nearby({ areas }: { areas: DeerArea[] }) {
-  return (
-    <section className="hs-sec">
-      <div className="sh">
-        <h2>Nearby deer areas</h2>
-      </div>
-      <ul className="hs-nearby">
-        {areas.map((n) => (
-          <li key={n.area}>
-            <a href={deerPath(n)}>
-              <b>{n.area}</b> {n.name}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
 function AreaPage({ a }: { a: DeerArea }) {
   const near = neighbors(a);
   const shown = [a, ...near];
@@ -223,50 +206,61 @@ function AreaPage({ a }: { a: DeerArea }) {
     !!h && all.findIndex((x) => x?.unit === h.unit) === i
   );
 
+  const licenses = a.closed ? [] : deerLicenses(a);
+
   return (
     <>
-      <Collar year={DEER_YEAR}>
-        <b>Deer hunt area {a.area}</b> · Region {a.region} ·{" "}
-        {herds.map((h) => `Herd unit ${h.unit}`).join(" · ")}
-        {herds.length ? " · " : ""}
-        {num.format(a.sqMiles)} sq mi
-      </Collar>
+      <AreaHero
+        species="deer"
+        focus={collection([areaFeature(a)])}
+        bbox={a.bbox}
+        crumbs={[{ href: "/hunting/deer", label: "Deer hunt areas" }, { label: `Area ${a.area}` }]}
+        kicker={`Deer hunt area ${a.area}${herdNames(a) ? ` · ${herdNames(a)} herd` : ""}`}
+        name={a.name}
+        answer={areaHeadline(a)}
+        num={String(a.area)}
+        facts={[
+          `Deer hunt area ${a.area}`,
+          `region ${a.region}`,
+          ...herds.map((h) => `herd unit ${h.unit}`),
+          `${num.format(a.sqMiles)} sq mi`,
+        ].join(" · ")}
+        license={licenses[0]}
+        none={
+          a.closed
+            ? `Area ${a.area} is closed to deer hunting in ${DEER_YEAR}.`
+            : `No deer licenses were drawn for Area ${a.area} in ${DEER_YEAR}.`
+        }
+      />
       <main className="hs-wrap">
-        <Crumbs items={[{ href: "/", label: SITE_NAME }, { href: "/hunting/deer", label: "Deer hunt areas" }, { label: `Area ${a.area}` }]} />
-        <div className="hs-head">
-          <div>
-            <h1>
-              <span className="kicker">
-                Deer hunt area {a.area}
-                {herdNames(a) ? ` · ${herdNames(a)} herd` : ""}
-              </span>
-              {a.name}
-            </h1>
-            <p className="answer">{areaHeadline(a)}</p>
+        <section className="hs-sec" id="licenses">
+          <div className="sh">
+            <h2>{licensesHeading(licenses.length, `Area ${a.area}`)}</h2>
+            {licenses.length > 0 && (
+              <p>Your chance at the points you hold, the points that drew in {DEER_YEAR}, and the whole draw replayed.</p>
+            )}
           </div>
-          <Adjoining a={a} near={near} href={deerPath} />
-        </div>
+          <DrawBoard
+            species="deer"
+            year={DEER_YEAR}
+            where={`Area ${a.area}`}
+            licenses={licenses}
+            map={
+              <HuntMap
+                species="deer"
+                areas={collection(shown.map((x) => areaFeature(x)))}
+                labels={shown.map(marker)}
+                bounds={a.bbox}
+                highlight={[a.area]}
+                hrefFor="/hunting/deer/area-{area}"
+                odds={mapOdds(shown)}
+                legend={`Area ${a.area}`}
+              />
+            }
+          />
+        </section>
 
-        <DrawBoard
-          species="deer"
-          year={DEER_YEAR}
-          where={`Area ${a.area}`}
-          licenses={a.closed ? [] : deerLicenses(a)}
-          map={
-            <HuntMap
-              species="deer"
-              areas={collection(shown.map((x) => areaFeature(x)))}
-              labels={shown.map(marker)}
-              bounds={a.bbox}
-              highlight={[a.area]}
-              hrefFor="/hunting/deer/area-{area}"
-              odds={mapOdds(shown)}
-              legend={`Area ${a.area}`}
-            />
-          }
-        />
-
-        <section className="hs-sec">
+        <section className="hs-sec" id="details">
           <div className="sh">
             <h2>Seasons and draw details</h2>
             <p>Every {DEER_YEAR} season and draw for Area {a.area}.</p>
@@ -310,8 +304,8 @@ function AreaPage({ a }: { a: DeerArea }) {
           )}
         </section>
 
+        <Around a={a} near={near} href={deerPath} species="deer" />
         {!a.closed && <Outfitters where={`Area ${a.area}`} subject={`Outfitter listing: Deer Area ${a.area}`} />}
-        {near.length > 0 && <Nearby areas={near} />}
         <HowToRead />
       </main>
     </>
@@ -319,43 +313,52 @@ function AreaPage({ a }: { a: DeerArea }) {
 }
 
 function RegionPage({ r }: { r: DeerRegion }) {
+  const licenses = regionLicenses(r);
+
   return (
     <>
-      <Collar year={DEER_YEAR}>
-        <b>Deer region {r.region}</b> · Nonresident general license · {r.areas.length} hunt areas ·{" "}
-        {r.generalAreas.length} with a general season
-      </Collar>
+      <AreaHero
+        species="deer"
+        focus={collection(r.areas.map((x) => areaFeature(x)))}
+        bbox={unionBounds(r.areas)}
+        crumbs={[{ href: "/hunting/deer", label: "Deer hunt areas" }, { label: `Region ${r.region}` }]}
+        kicker="Deer · nonresident general license"
+        name={`Region ${r.region}`}
+        answer={regionHeadline(r)}
+        num={r.region}
+        facts={`Deer region ${r.region} · ${r.areas.length} hunt areas · ${r.generalAreas.length} with a general season`}
+        license={licenses[0]}
+        none={`No Region ${r.region} general licenses were drawn in ${DEER_YEAR}.`}
+      />
       <main className="hs-wrap">
-        <Crumbs items={[{ href: "/", label: SITE_NAME }, { href: "/hunting/deer", label: "Deer hunt areas" }, { label: `Region ${r.region}` }]} />
-        <div className="hs-head">
-          <div>
-            <h1>
-              <span className="kicker">Deer · nonresident general license</span>
-              Region {r.region}
-            </h1>
-            <p className="answer">{regionHeadline(r)}</p>
+        <section className="hs-sec" id="licenses">
+          <div className="sh">
+            <h2>{licensesHeading(licenses.length, `Region ${r.region}`)}</h2>
+            <p>
+              One nonresident license for the general seasons of {r.generalAreas.length} areas. Your chance at the
+              points you hold, and the whole draw replayed.
+            </p>
           </div>
-        </div>
+          <DrawBoard
+            species="deer"
+            year={DEER_YEAR}
+            where={`Region ${r.region}`}
+            licenses={licenses}
+            map={
+              <HuntMap
+                species="deer"
+                areas={collection(r.areas.map((x) => areaFeature(x)))}
+                labels={r.areas.map(marker)}
+                bounds={unionBounds(r.areas)}
+                highlight={r.areas.map((x) => x.area)}
+                hrefFor="/hunting/deer/area-{area}"
+                legend={`Region ${r.region}`}
+              />
+            }
+          />
+        </section>
 
-        <DrawBoard
-          species="deer"
-          year={DEER_YEAR}
-          where={`Region ${r.region}`}
-          licenses={regionLicenses(r)}
-          map={
-            <HuntMap
-              species="deer"
-              areas={collection(r.areas.map((x) => areaFeature(x)))}
-              labels={r.areas.map(marker)}
-              bounds={unionBounds(r.areas)}
-              highlight={r.areas.map((x) => x.area)}
-              hrefFor="/hunting/deer/area-{area}"
-              legend={`Region ${r.region}`}
-            />
-          }
-        />
-
-        <section className="hs-sec">
+        <section className="hs-sec" id="details">
           <div className="sh">
             <h2>{DEER_YEAR} draw details</h2>
           </div>

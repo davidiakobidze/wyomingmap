@@ -5,11 +5,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: `${SITE_NAME} · Parks, scenic drives, photo spots, and wildfires`,
+    default: `${SITE_NAME} · Wyoming elk and deer draw odds by hunt area`,
     template: `%s · ${SITE_NAME}`,
   },
   description:
-    "A curated map of Wyoming for visitors: Yellowstone and Grand Teton, the best scenic drives, where to stand for the photo, and what is burning right now.",
+    "Every Wyoming elk and deer hunt area on one map, with the preference points nonresidents needed and your own draw odds, from Wyoming Game and Fish's draw reports.",
   metadataBase: new URL(SITE_URL),
   alternates: { canonical: SITE_URL },
   openGraph: {

@@ -3,33 +3,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CombinedOdds,
-  DemandDraw,
   chanceAt,
+  chanceBig,
   combinedOdds,
   firstChoiceChance,
   pointsKey,
   pointsLabel,
-  pointsValue,
 } from "@/lib/hunts";
 import { Species, usePoints } from "@/lib/points";
 import { License, demandOf } from "@/lib/license";
+import DotDraw from "./DotDraw";
 
 const num = new Intl.NumberFormat("en-US");
 const plural = (n: number, w: string) => `${num.format(n)} ${w}${n === 1 ? "" : "s"}`;
-
-// The big number: "Sure", "35%", "1 in 44".
-function bigChance(c: number | null): string {
-  if (c === null) return "—";
-  if (c >= 0.995) return "Sure";
-  if (c <= 0) return "None";
-  if (c >= 0.1) return `${Math.round(c * 100)}%`;
-  const n = Math.round(1 / c);
-  return n > 1000 ? "<1 in 1,000" : `1 in ${num.format(n)}`;
-}
-
-// Point levels in a narrow column: "14", "under 15", "3 or fewer".
-const shortPoints = (label: string) =>
-  label.startsWith("<=") ? `${label.replace(/[<=\s]/g, "")} or fewer` : label.startsWith("<") ? `under ${label.replace(/[<\s]/g, "")}` : label;
 
 // The lowest whole point count that was sure to draw on points, and the
 // highest that was sure to miss.
@@ -84,7 +70,7 @@ export default function DrawBoard({
                 <span className="h">{x.title}</span>
                 <span className="r">
                   <span>{at}</span>
-                  <b>{c === null ? "—" : c >= 0.995 ? "Sure" : bigChance(c)}</b>
+                  <b>{c === null ? "—" : c >= 0.995 ? "Sure" : chanceBig(c)}</b>
                 </span>
               </button>
             );
@@ -95,7 +81,7 @@ export default function DrawBoard({
         <div>{map}</div>
         {l ? <Coupon l={l} pts={pts} species={species} year={year} /> : <NoCoupon where={where} year={year} />}
       </div>
-      {l && <Ladder key={l.id} l={l} pts={pts} year={year} where={where} />}
+      {l && <DotDraw key={l.id} l={l} pts={pts} year={year} where={where} />}
     </>
   );
 }
@@ -154,7 +140,7 @@ function Coupon({ l, pts, species, year }: { l: License; pts: number; species: S
   }, [l]);
 
   const c = view?.k ? chanceAt(view.k, pts) : null;
-  const text = bigChance(c);
+  const text = chanceBig(c);
   useEffect(() => {
     if (!big.current || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     big.current.animate([{ transform: "translateY(8px)", opacity: 0.15 }, { transform: "none", opacity: 1 }], {
@@ -176,7 +162,7 @@ function Coupon({ l, pts, species, year }: { l: License; pts: number; species: S
         </div>
         <div className="read">
           <span className="n" ref={big}>
-            {ch === null ? "—" : bigChance(ch / 100)}
+            {ch === null ? "—" : chanceBig(ch / 100)}
           </span>
           <span className="u">chance for a first-choice applicant. Points don&apos;t count in this draw.</span>
         </div>
@@ -292,166 +278,4 @@ function chanceWords(c: number | null): string {
   if (c === null) return "no first choices";
   if (c >= 100) return "everyone drew";
   return c < 1 ? "under 1%" : `about ${Math.round(c)}%`;
-}
-
-interface LadderRow {
-  label: string;
-  lo: number;
-  hi: number;
-  applicants: number;
-  drew: number;
-}
-
-// One dot per applicant, a row per point level, with the line where the
-// point draw ran out and a random draw the reader can run again.
-function Ladder({ l, pts, year, where }: { l: License; pts: number; year: number; where: string }) {
-  const model = useMemo(() => {
-    let rows: LadderRow[];
-    let losers: number, randomTags: number, who: string, d: DemandDraw | undefined;
-    if (l.points) {
-      const o = combinedOdds(l.points, l.random);
-      const lastDrew = o.rows.reduce((i, x, j) => (x.drew > 0 ? j : i), -1);
-      const top = o.rows.slice(0, lastDrew + 1).map((x) => {
-        const v = pointsValue(x.points);
-        return { label: shortPoints(x.points), lo: v, hi: v, applicants: x.applicants, drew: x.drew };
-      });
-      const rest = o.rows.slice(lastDrew + 1);
-      if (rest.length) {
-        const hi = pointsValue(rest[0].points);
-        const lo = pointsValue(rest[rest.length - 1].points);
-        top.push({
-          label: rest.length === 1 ? shortPoints(rest[0].points) : `${Math.max(0, Math.ceil(lo))}–${Math.floor(hi)}`,
-          lo: rest.length === 1 ? lo : Math.min(lo, 0),
-          hi,
-          applicants: rest.reduce((s, x) => s + x.applicants, 0),
-          drew: 0,
-        });
-      }
-      rows = top;
-      losers = o.losers;
-      randomTags = Math.min(o.randomQuota, o.losers);
-      who = "nonresident";
-      return { rows, losers, randomTags, who, cutAt: rest.length && o.losers ? top.length - 1 : -1, random: true };
-    }
-    const dm = demandOf(l);
-    d = dm?.d;
-    if (!d || d.first === 0) return null;
-    rows = [{ label: "any points", lo: -1, hi: 99, applicants: d.first, drew: 0 }];
-    return {
-      rows,
-      losers: d.first,
-      randomTags: Math.min(d.quota, d.first),
-      who: dm!.who.toLowerCase(),
-      cutAt: -1,
-      random: true,
-    };
-  }, [l]);
-
-  const total = model ? model.rows.reduce((s, r) => s + r.applicants, 0) : 0;
-  const per = total > 1500 ? Math.ceil(total / 1000) : 1;
-  const dots = useMemo(() => {
-    if (!model) return [];
-    return model.rows.map((r) => ({
-      n: Math.max(1, Math.round(r.applicants / per)),
-      drew: Math.round(r.drew / per),
-    }));
-  }, [model, per]);
-  const loserSlots = dots.reduce((s, r) => s + r.n - r.drew, 0);
-  const winners = model ? Math.min(loserSlots, Math.max(model.randomTags ? 1 : 0, Math.round(model.randomTags / per))) : 0;
-
-  const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
-  const [picked, setPicked] = useState<Set<number>>(new Set());
-  const draw = () => {
-    const idx = Array.from({ length: loserSlots }, (_, i) => i);
-    for (let i = 0; i < winners; i++) {
-      const j = i + Math.floor(Math.random() * (idx.length - i));
-      [idx[i], idx[j]] = [idx[j], idx[i]];
-    }
-    setPicked(new Set(idx.slice(0, winners)));
-  };
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (es) => {
-        if (es.some((e) => e.isIntersecting)) {
-          setShown(true);
-          io.disconnect();
-        }
-      },
-      { threshold: 0, rootMargin: "0px 0px 120px 0px" }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-  useEffect(() => {
-    if (!shown) return;
-    const t = window.setTimeout(draw, 900);
-    return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shown]);
-
-  if (!model) return null;
-  let k = 0; // dot index, for the pop-in stagger
-  let loser = 0; // index among dots that missed the point draw
-  const isPoints = !!l.points;
-
-  return (
-    <section className="hs-sec">
-      <div className="sh">
-        <h2>Every applicant in the {year} draw</h2>
-        <div className="sh-side">
-          <p>
-            One dot per {per > 1 ? `${per} ` : ""}
-            {model.who} {per > 1 ? "applicants" : "applicant"} who put {where} {l.kicker} first.{" "}
-            {isPoints ? "Black drew on points; purple won the random draw." : "Purple won the random draw."}
-          </p>
-          {winners > 0 && (
-            <button type="button" className="hs-btn" onClick={draw}>
-              Run the draw again
-            </button>
-          )}
-        </div>
-      </div>
-      <div className={"hs-ladder" + (shown ? " in" : "")} ref={ref}>
-        {model.rows.map((r, i) => {
-          const you = isPoints && pts >= r.lo && pts <= r.hi && (r.lo === r.hi ? pts === r.lo : true);
-          return (
-            <Row key={i} cut={i === model.cutAt ? model : null}>
-              <div className={"lv" + (you ? " you" : "")}>{isPoints ? `${r.label} pts` : r.label}</div>
-              <div className="dots">
-                {Array.from({ length: dots[i].n }, (_, j) => {
-                  const pt = j < dots[i].drew;
-                  const rd = !pt && picked.has(loser++);
-                  return <i key={j} className={"d" + (pt ? " pt" : rd ? " rd" : "")} style={{ "--i": Math.min(k++, 1000) } as React.CSSProperties} />;
-                })}
-              </div>
-              <div className="lr">
-                {isPoints ? `${num.format(r.drew)} of ${num.format(r.applicants)} drew` : `${num.format(model.randomTags)} of ${num.format(r.applicants)} drew`}
-              </div>
-            </Row>
-          );
-        })}
-      </div>
-      <div className="hs-key">
-        {isPoints && <span className="k1">Drew in the point draw</span>}
-        <span className="k2">Drew in the random draw</span>
-        <span>Went home empty</span>
-      </div>
-    </section>
-  );
-}
-
-function Row({ cut, children }: { cut: { losers: number; randomTags: number } | null; children: React.ReactNode }) {
-  return (
-    <>
-      {cut && (
-        <div className="cut">
-          Point draw ran out · {num.format(cut.losers)} go to the random draw for {plural(cut.randomTags, "tag")}
-        </div>
-      )}
-      {children}
-    </>
-  );
 }

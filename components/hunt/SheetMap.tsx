@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import maplibregl, { type ExpressionSpecification } from "maplibre-gl";
-import mlcontour from "maplibre-contour";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Feature, FeatureCollection, Position } from "geojson";
 import type { Bounds } from "@/lib/site";
-import { C, DEM_MAXZOOM, DEM_TILES, sheetStyle } from "./sheetStyle";
+import { CONTOURS, demSource } from "./dem";
+import { C, sheetStyle } from "./sheetStyle";
 
 export interface AreaLabel {
   area: number;
@@ -25,26 +25,6 @@ export interface SheetMapProps {
   tips?: Record<number, string>; // a second line for the hover label
   satellite: boolean;
 }
-
-// One DEM source for the whole page: the hillshade and the contour lines read
-// the same cached tiles, and contours are traced in a web worker.
-let dem: InstanceType<typeof mlcontour.DemSource> | null = null;
-function demSource() {
-  if (!dem) {
-    dem = new mlcontour.DemSource({ url: DEM_TILES, encoding: "terrarium", maxzoom: DEM_MAXZOOM, worker: true });
-    dem.setupMaplibre(maplibregl);
-  }
-  return dem;
-}
-
-// Feet, with an index line every fifth contour, as on a USGS quad.
-const CONTOURS = {
-  multiplier: 3.28084,
-  thresholds: { 7: [1000, 5000], 8: [500, 2500], 9: [200, 1000], 11: [100, 500], 12: [40, 200] },
-  elevationKey: "ele",
-  levelKey: "level",
-  contourLayer: "contours",
-};
 
 const USGS_IMAGERY =
   "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}";
@@ -139,6 +119,8 @@ export default function SheetMap({ areas, labels, bounds, highlight, hrefFor, fi
 
     let antsTimer: number | undefined;
     m.on("load", () => {
+      // The compact attribution opens expanded and covers the map on a phone; start it folded.
+      el.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
       const { areas, labels, highlight } = props.current;
       const lit: ExpressionSpecification = ["in", ["get", "area"], ["literal", highlight]];
       const before = "contour-label";

@@ -80,6 +80,41 @@ export function Adjoining<T extends MapArea>({ a, near, href }: { a: T; near: T[
   );
 }
 
+// The areas around this one: the compass key, then the same areas by name.
+export function Around<T extends MapArea>({
+  a,
+  near,
+  href,
+  species,
+}: {
+  a: T;
+  near: T[];
+  href: (x: T) => string;
+  species: string;
+}) {
+  if (!near.length) return null;
+  return (
+    <section className="hs-sec" id="around">
+      <div className="sh">
+        <h2>Around Area {a.area}</h2>
+        <p>The {species} areas next to this one, laid out the way they lie on the ground.</p>
+      </div>
+      <div className="hs-around">
+        <Adjoining a={a} near={near} href={href} />
+        <ul className="hs-nearby">
+          {near.map((n) => (
+            <li key={n.area}>
+              <a href={href(n)}>
+                <b>{n.area}</b> {n.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
 export function Outfitters({ where, subject }: { where: string; subject: string }) {
   const mailto = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
     "Outfitter name:\nWyoming outfitter license number:\nAreas you guide in:\nWebsite:\n"

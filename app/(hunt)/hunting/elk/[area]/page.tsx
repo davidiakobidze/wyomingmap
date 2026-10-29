@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import AreaHero from "@/components/hunt/AreaHero";
 import DrawBoard from "@/components/hunt/DrawBoard";
 import HuntMap from "@/components/hunt/HuntMap";
-import { Adjoining, Collar, Crumbs, Outfitters } from "@/components/hunt/Sheet";
+import { Around, Outfitters } from "@/components/hunt/Sheet";
 import { Demand, NonresidentDraws, OddsAssumptions } from "@/components/HuntDraws";
 import {
   ELK_AREAS,
@@ -17,9 +18,9 @@ import {
   mainHunt,
   neighbors,
 } from "@/lib/elk";
-import { areaFeature, collection, marker, nonresidentPhrase, oddsPhrase, sentences } from "@/lib/hunts";
+import { areaFeature, collection, licensesHeading, marker, nonresidentPhrase, oddsPhrase, sentences } from "@/lib/hunts";
 import { AreaOdds, oddsOf } from "@/lib/license";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/lib/site";
 
 export const dynamicParams = false;
 
@@ -92,47 +93,52 @@ export default function ElkAreaPage({ params }: { params: { area: string } }) {
   if (!a) notFound();
   const near = neighbors(a);
   const shown = [a, ...near];
+  const licenses = elkLicenses(a);
 
   return (
     <>
-      <Collar year={ELK_YEAR}>
-        <b>Elk hunt area {a.area}</b> · {a.region} region · Herd unit {a.herdUnit} · {num.format(a.sqMiles)} sq mi
-      </Collar>
+      <AreaHero
+        species="elk"
+        focus={collection([areaFeature(a)])}
+        bbox={a.bbox}
+        crumbs={[{ href: "/hunting/elk", label: "Elk hunt areas" }, { label: `Area ${a.area}` }]}
+        kicker={`Elk hunt area ${a.area} · ${a.herdName} herd`}
+        name={a.name}
+        answer={headline(a)}
+        num={String(a.area)}
+        facts={`Elk hunt area ${a.area} · ${a.region} region · herd unit ${a.herdUnit} · ${num.format(a.sqMiles)} sq mi`}
+        license={licenses[0]}
+        none={`Wyoming Game and Fish drew no limited-quota elk licenses for Area ${a.area} in ${ELK_YEAR}.`}
+      />
       <main className="hs-wrap">
-        <Crumbs items={[{ href: "/", label: SITE_NAME }, { href: "/hunting/elk", label: "Elk hunt areas" }, { label: `Area ${a.area}` }]} />
-        <div className="hs-head">
-          <div>
-            <h1>
-              <span className="kicker">
-                Elk hunt area {a.area} · {a.herdName} herd
-              </span>
-              {a.name}
-            </h1>
-            <p className="answer">{headline(a)}</p>
+        <section className="hs-sec" id="licenses">
+          <div className="sh">
+            <h2>{licensesHeading(licenses.length, `Area ${a.area}`)}</h2>
+            {licenses.length > 0 && (
+              <p>Your chance at the points you hold, the points that drew in {ELK_YEAR}, and the whole draw replayed.</p>
+            )}
           </div>
-          <Adjoining a={a} near={near} href={elkPath} />
-        </div>
+          <DrawBoard
+            species="elk"
+            year={ELK_YEAR}
+            where={`Area ${a.area}`}
+            licenses={licenses}
+            map={
+              <HuntMap
+                species="elk"
+                areas={collection(shown.map((x) => areaFeature(x)))}
+                labels={shown.map(marker)}
+                bounds={a.bbox}
+                highlight={[a.area]}
+                hrefFor="/hunting/elk/area-{area}"
+                odds={mapOdds(shown)}
+                legend={`Area ${a.area}`}
+              />
+            }
+          />
+        </section>
 
-        <DrawBoard
-          species="elk"
-          year={ELK_YEAR}
-          where={`Area ${a.area}`}
-          licenses={elkLicenses(a)}
-          map={
-            <HuntMap
-              species="elk"
-              areas={collection(shown.map((x) => areaFeature(x)))}
-              labels={shown.map(marker)}
-              bounds={a.bbox}
-              highlight={[a.area]}
-              hrefFor="/hunting/elk/area-{area}"
-              odds={mapOdds(shown)}
-              legend={`Area ${a.area}`}
-            />
-          }
-        />
-
-        <section className="hs-sec">
+        <section className="hs-sec" id="details">
           <div className="sh">
             <h2>Draw details</h2>
             <p>Every {ELK_YEAR} draw for Area {a.area}, point level by point level.</p>
@@ -153,24 +159,8 @@ export default function ElkAreaPage({ params }: { params: { area: string } }) {
           {a.hunts.some((h) => h.nrPoints) && <OddsAssumptions year={ELK_YEAR} />}
         </section>
 
+        <Around a={a} near={near} href={elkPath} species="elk" />
         <Outfitters where={`Area ${a.area}`} subject={`Outfitter listing: Elk Area ${a.area}`} />
-
-        {near.length > 0 && (
-          <section className="hs-sec">
-            <div className="sh">
-              <h2>Nearby elk areas</h2>
-            </div>
-            <ul className="hs-nearby">
-              {near.map((n) => (
-                <li key={n.area}>
-                  <a href={elkPath(n)}>
-                    <b>{n.area}</b> {n.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
 
         <section className="hs-sec hs-read">
           <div className="sh">
