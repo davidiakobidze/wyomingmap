@@ -3,7 +3,7 @@ import AreaIndex, { IndexRow } from "@/components/hunt/AreaIndex";
 import HuntMap from "@/components/hunt/HuntMap";
 import { Collar } from "@/components/hunt/Sheet";
 import { ELK_AREAS, ELK_SOURCES, ELK_YEAR, elkLicenses, elkPath } from "@/lib/elk";
-import { marker } from "@/lib/hunts";
+import { marker, seasonDates } from "@/lib/hunts";
 import { AreaOdds, oddsOf, sureFrom } from "@/lib/license";
 import { SITE_URL, WYOMING_BOUNDS } from "@/lib/site";
 
@@ -28,8 +28,8 @@ export default function ElkIndex() {
       num: String(a.area),
       name: a.name,
       href: elkPath(a),
-      sub: `${a.herdName} herd`,
-      license: l ? `${l.kicker}, ${l.title.toLowerCase()}` : "None drawn",
+      sub: [`${a.herdName} herd`, a.general[0] ? `general season ${seasonDates(a.general[0])}` : a.closed ? "closed" : "draw only"].join(" · "),
+      license: l ? (l.id === "general" ? `${a.region} general` : `${l.kicker}, ${l.title.toLowerCase()}`) : a.closed ? "Closed" : "None drawn",
       need: sureFrom(o),
       odds: o,
     };
@@ -67,7 +67,10 @@ export default function ElkIndex() {
         <section className="hs-sec">
           <div className="sh">
             <h2>Every elk area</h2>
-            <p>The main any-elk license in each area, for a nonresident. Sort by your chance to find a tag.</p>
+            <p>
+              The license a nonresident applies for in each area: the region general license where there is a
+              general season, else the main limited-quota license. Sort by your chance to find a tag.
+            </p>
           </div>
           <AreaIndex species="elk" rows={rows} label="an elk area" />
         </section>

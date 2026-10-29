@@ -45,9 +45,16 @@ its ArcGIS hunt-area layers:
 | `/hunting/deer`, `/hunting/deer/area-N`, `/hunting/deer/region-x` | `data/deer-hunt-areas.json` |
 
 `public/data/<species>-hunt-areas.geojson` holds the boundaries alone, for the statewide
-map. Deer also carries season dates, legal deer and boundary descriptions from WGFD
-Chapter 6 (Deer Hunting Seasons), and the 17 nonresident general-license regions get their
-own pages, since nonresidents draw deer by region rather than by area.
+map. Both species carry season dates, what each license allows and boundary descriptions
+from the WGFD season regulation (Chapter 6 for deer, Chapter 7 for elk). The 17 deer
+nonresident general-license regions get their own pages, since nonresidents draw deer by
+region rather than by area; elk areas with a general season show their region's general
+license (Eastern, Southern or Western) on the area page.
+
+Every area and region page has a share card (`opengraph-image.tsx` beside the page, drawn
+by `lib/og.tsx`), built at deploy time from the same data. The fonts in `lib/og/` are
+static Fraunces and Geist instances (OFL) from Fontsource, because the image renderer
+can't read variable fonts or woff2.
 
 ```bash
 python3 -I scripts/hunts/build_hunt_data.py elk /tmp/wgfd

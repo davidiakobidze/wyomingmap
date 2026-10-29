@@ -38,7 +38,8 @@ SPECIES = {
         ],
         # Hunts that appear in these reports get flag=True.
         "antlerless": ("cowCalf", ("nr_cc", "res_cc")),
-        "seasons": None,
+        # Chapter 7, Elk Hunting Seasons.
+        "seasons": 33695,
         "layer": "ElkHuntAreas",
         "fields": "HUNTAREA,HERDUNIT,HERDNAME,SqMiles,HUNTNAME,Region",
         "props": lambda p: {
@@ -84,10 +85,14 @@ BLOCK_START = re.compile(r"^(\d{3}|[A-Z])\s+(\d+)?\s*(.*?)\s*$")
 # Season table rows: area(s), type, two or four dates, quota?, limitations.
 MONTH = r"(?:Jan|Feb|Mar|Apr|May|June|Jun|July|Jul|Aug|Sept|Sep|Oct|Nov|Dec)\.?\s*\d{1,2}"
 SEASON_ROW = re.compile(
-    rf"^\s*(\d+(?:\s*,\s*\d+)*,?)\s+(Gen|\d+)\s+((?:{MONTH}\s+)*{MONTH})\s+(?:(\d+|Unlimited)\s+)?(\S.*?)\s*$"
+    rf"^\s*(\d+(?:\s*,\s*\d+)*,?)\s+(Gen-?|\d+)\s+((?:{MONTH}\s+)*{MONTH})\s+(?:(\d+|Unlimited)\s+)?(\S.*?)\s*$"
 )
+# The rest of a "Gen- / Youth / only" type, wrapped under the type column.
+YOUTH_CONT = re.compile(r"^(\s*)(Youth|only)\b")
 AREA_CONT = re.compile(r"^\s*(\d+(?:\s*,\s*\d+)*,?)(?=\s|$)")
 CLOSED_ROW = re.compile(r"^\s*(\d+)\s+Closed\s*$")
+# A row with dates but no license type (the National Elk Refuge, Elk 77).
+UNTYPED_ROW = re.compile(rf"^\s*\d+\s+(?:Youth\s+)?{MONTH}")
 BOUNDARY_START = re.compile(r"^\s+Area (\d+)\.\s+(.*?)\.\s+(.*)$")
 
 
@@ -180,7 +185,8 @@ def season_date(s: str) -> str:
 
 def parse_seasons(text: str) -> tuple:
     """The Section 2 table of a WGFD season regulation, keyed by (area, type),
-    plus the areas it lists as closed. Rows wrap: the limitations column
+    plus the areas it lists as closed. Youth-only general seasons ("Gen-
+    Youth only") are keyed GEN-YOUTH. Rows wrap: the limitations column
     continues on following lines, and a list of areas ("23,") continues at the
     left margin while it ends in a comma."""
     seasons: dict = {}
@@ -203,6 +209,8 @@ def parse_seasons(text: str) -> tuple:
             current = None
             closed.append(c.group(1))
             continue
+        if UNTYPED_ROW.match(line):
+            print(f"warning: season row with no license type, skipped: {line.strip()}", file=sys.stderr)
         m = SEASON_ROW.match(line)
         if m:
             finish()
@@ -213,7 +221,7 @@ def parse_seasons(text: str) -> tuple:
             d = [season_date(x) for x in d]
             current = {
                 "areas": [a for a in re.split(r"\s*,\s*", areas.strip(", ")) if a],
-                "type": "GEN" if htype == "Gen" else htype,
+                "type": {"Gen": "GEN", "Gen-": "GEN-YOUTH"}.get(htype, htype),
                 "archery": d[:2] if len(d) == 4 else None,
                 "opens": d[-2],
                 "closes": d[-1],
@@ -225,6 +233,8 @@ def parse_seasons(text: str) -> tuple:
             continue
         if current is None:
             continue
+        if current["type"] == "GEN-YOUTH":
+            line = YOUTH_CONT.sub(lambda y: y.group(1) + " " * len(y.group(2)), line)
         rest = line
         a = AREA_CONT.match(line)
         if a and a.start(1) < 8 and current["more"]:
@@ -248,7 +258,8 @@ def parse_seasons(text: str) -> tuple:
 
 
 def parse_boundaries(text: str) -> dict:
-    """Section 3: "Area 148. Teton. Beginning where ..." paragraphs."""
+    """Hunt Area Descriptions (Section 7 for deer, 9 for elk): "Area 148. Teton.
+    Beginning where ..." paragraphs."""
     out: dict = {}
     current = None
     body = text.split("Section 3.", 1)[1] if "Section 3." in text else ""
@@ -372,7 +383,8 @@ def main(species: str, workdir: Path) -> None:
         a.update({"sqMiles": round(p["SqMiles"]), "bbox": bbox(f["geometry"]), "geometry": f["geometry"]})
         a["hunts"] = hunts_by_area.get(num, [])
         if cfg["seasons"]:
-            a["general"] = seasons.get((num, "GEN"), [])
+            # Youth-only weekends last, so the first row is the general season everyone hunts.
+            a["general"] = seasons.get((num, "GEN"), []) + seasons.get((num, "GEN-YOUTH"), [])
             a["closed"] = num in closed
             a["boundary"] = boundaries.get(num)
         areas.append(a)
