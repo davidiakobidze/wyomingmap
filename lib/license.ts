@@ -1,3 +1,4 @@
+import type { LicenseHarvest } from "@/lib/harvest";
 import { DemandDraw, PointsDraw, PointsKey, chanceAt, combinedOdds, firstChoiceChance, pointsKey } from "@/lib/hunts";
 
 // One license as the draw board shows it. Server pages build these from the
@@ -13,6 +14,7 @@ export interface License {
   demandWho?: "Nonresident" | "Resident";
   resident?: DemandDraw;
   note?: string; // a line for the coupon stub, e.g. season dates
+  harvest?: LicenseHarvest; // how its hunters did the season before the draw
 }
 
 // A license's random-only draw, nonresident first, else resident.

@@ -29,7 +29,8 @@ export default function HuntingLayout({ children }: { children: React.ReactNode 
           Terrain Tiles; base map © OpenStreetMap.
         </span>
         <span>
-          <a href="/hunting/elk">Elk areas</a> · <a href="/hunting/deer">Deer areas</a>
+          <a href="/hunting/elk">Elk areas</a> · <a href="/hunting/deer">Deer areas</a> ·{" "}
+          <a href="/hunting/elk/finder">Hunt finder</a>
         </span>
       </footer>
       <Motion />
