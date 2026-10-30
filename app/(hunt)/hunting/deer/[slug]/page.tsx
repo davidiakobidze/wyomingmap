@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import AreaHero from "@/components/hunt/AreaHero";
 import DrawBoard from "@/components/hunt/DrawBoard";
+import { HarvestNote, HarvestTable, RegionHarvestTable, harvestLead } from "@/components/hunt/HarvestTable";
 import HuntMap from "@/components/hunt/HuntMap";
 import SeasonTable from "@/components/hunt/SeasonTable";
 import { Around, Outfitters } from "@/components/hunt/Sheet";
@@ -36,6 +37,14 @@ import {
   sentences,
   unionBounds,
 } from "@/lib/hunts";
+import {
+  DEER_HARVEST_SOURCE,
+  DEER_KINDS,
+  HARVEST_REPORTS,
+  HARVEST_SEASON,
+  deerAreaHarvest,
+  deerRegionHarvest,
+} from "@/lib/harvest";
 import { AreaOdds, oddsOf } from "@/lib/license";
 import { SITE_URL } from "@/lib/site";
 
@@ -99,7 +108,7 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
     const a = page.area;
     path = deerPath(a);
     title = `Wyoming Deer Area ${a.area} (${a.name}): ${DEER_YEAR} seasons, draw odds and map`;
-    description = `${areaHeadline(a)} Season dates, every limited-quota license, the area boundary on a map, and its legal description.`;
+    description = `${areaHeadline(a)} Season dates, every limited-quota license, ${HARVEST_SEASON} hunter success, the area boundary on a map, and its legal description.`;
   } else {
     const r = page.region;
     path = regionPath(r.region);
@@ -180,6 +189,15 @@ function AreaPage({ a }: { a: DeerArea }) {
   );
 
   const licenses = a.closed ? [] : deerLicenses(a);
+  const harvest = deerAreaHarvest(a.area);
+  const tables = DEER_KINDS.map((k) => ({ ...k, h: harvest[k.kind] })).filter(
+    (x): x is typeof x & { h: NonNullable<typeof x.h> } => !!x.h && x.h.total.hunters > 0
+  );
+  const describe = (t: string) => {
+    if (t === "GEN") return "General season";
+    const h = a.hunts.find((x) => x.type === t);
+    return h ? `Type ${t} · ${h.description}` : `Type ${t}`;
+  };
 
   return (
     <>
@@ -232,6 +250,23 @@ function AreaPage({ a }: { a: DeerArea }) {
             }
           />
         </section>
+
+        {tables.length > 0 && (
+          <section className="hs-sec" id="success">
+            <div className="sh">
+              <h2>How hunters did in {HARVEST_SEASON}</h2>
+              <p>
+                {tables.map((t) => `${t.label}: ${harvestLead(t.h, `a ${t.label.toLowerCase()}`)}`).join(" ")}
+              </p>
+            </div>
+            <div className="hs-harvests">
+              {tables.map((t) => (
+                <HarvestTable key={t.kind} h={t.h} caption={t.label} describe={describe} />
+              ))}
+            </div>
+            <HarvestNote source={DEER_HARVEST_SOURCE} reports={HARVEST_REPORTS} />
+          </section>
+        )}
 
         <section className="hs-sec" id="details">
           <div className="sh">
@@ -287,6 +322,11 @@ function AreaPage({ a }: { a: DeerArea }) {
 
 function RegionPage({ r }: { r: DeerRegion }) {
   const licenses = regionLicenses(r);
+  const byKind = deerRegionHarvest(r.region);
+  const harvestRows = DEER_KINDS.flatMap((k) => {
+    const s = byKind[k.kind];
+    return s && s.hunters > 0 ? [{ label: k.label, s }] : [];
+  });
 
   return (
     <>
@@ -340,6 +380,20 @@ function RegionPage({ r }: { r: DeerRegion }) {
           </ul>
           <OddsAssumptions year={DEER_YEAR} />
         </section>
+
+        {harvestRows.length > 0 && (
+          <section className="hs-sec" id="success">
+            <div className="sh">
+              <h2>How Region {r.region} hunters did in {HARVEST_SEASON}</h2>
+              <p>
+                Nonresidents hunting on the Region {r.region} general license, by the deer they went after. A hunter
+                after both counts in both rows.
+              </p>
+            </div>
+            <RegionHarvestTable rows={harvestRows} />
+            <HarvestNote source={DEER_HARVEST_SOURCE} reports={HARVEST_REPORTS} />
+          </section>
+        )}
 
         <section className="hs-sec">
           <div className="sh">

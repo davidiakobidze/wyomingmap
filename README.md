@@ -67,6 +67,22 @@ and the ids in `SPECIES` in the script, rerun, check that the printed hunt count
 the reports, and read any warnings (a season row the parser could not place, an area with
 no boundary description).
 
+### Hunter success
+
+`data/<species>-harvest.json` holds hunter success and days per animal for every hunt
+area, license type and nonresident general region, from WGFD's annual harvest reports
+(the deer report keeps mule deer and white-tailed deer apart). Area pages show it beside
+the draw, and the hunt finder (`/hunting/elk/finder`, `/hunting/deer/finder`) ranks every
+license by draw chance times success.
+
+```bash
+python3 -I scripts/hunts/build_harvest_data.py elk /tmp/wgfd
+python3 -I scripts/hunts/build_harvest_data.py deer /tmp/wgfd
+```
+
+The reports come out in February for the season just hunted; update `SEASON` and the media
+ids in the script.
+
 Photos are not in yet. When they are, they need to be sourced and licensed, not scraped.
 
 ## Live layers

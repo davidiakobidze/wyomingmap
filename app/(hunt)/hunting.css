@@ -367,6 +367,27 @@ html.lenis, html.lenis body { height: auto; }
 .hs-outfit p { margin: 6px 0 0; max-width: 640px; font: 300 19px/1.45 var(--serif); color: var(--snow-2); }
 .hs-outfit .kicker { margin: 0; }
 
+/* Harvest: how hunters did the season before */
+.hs-harvests { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 12px 36px; }
+.hs-harvest h3 { margin-top: 0; }
+.hs table.harvest td:first-child { font-family: var(--sans); font-size: 14px; }
+.hs table.harvest tr.sum td { color: var(--snow-2); }
+.hs table.harvest tr.sum:first-of-type td, .hs table.harvest tr:not(.sum) + tr.sum td { border-top: 1px solid var(--line-2); }
+
+/* Hunt finder */
+.hs-controls { display: flex; gap: 14px 22px; align-items: end; flex-wrap: wrap; margin: 8px 0 14px; }
+.hs-controls label { display: grid; gap: 6px; }
+.hs-controls label span { font: 10.5px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute); }
+.hs-controls select { font: 15px var(--sans); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--night-2); color: var(--snow); }
+.hs-seg { display: inline-flex; padding: 4px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--night-2); }
+.hs-seg button { all: unset; cursor: pointer; padding: 8px 16px; border-radius: 999px; font-size: 14px; color: var(--snow-2); }
+.hs-seg button.on { background: var(--gold); color: var(--night); }
+.hs-seg button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.hs table.finder td.fill { color: var(--gold); font-weight: 500; }
+.hs table.finder td.name .sub { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 560px; }
+.hs table.finder td.num .sub { font: 11px var(--sans); }
+.hs table.finder + .hs-btn, .hs .table-scroll + .hs-btn { margin-top: 14px; }
+
 /* Index pages: the sheet index */
 .hs-filter { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; font: 12px var(--mono); color: var(--mute); }
 .hs-filter input { font: 15px var(--sans); padding: 11px 18px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--night-2); color: var(--snow); min-width: 300px; }
@@ -401,6 +422,7 @@ html.lenis, html.lenis body { height: auto; }
   .fl-ladder .lr { display: none; }
   .fl-ladder { grid-template-columns: max-content minmax(0, 1fr); column-gap: 14px; }
   .hs-around { grid-template-columns: 1fr; gap: 28px; }
+  .hs-harvests { grid-template-columns: 1fr; }
 }
 @media (max-width: 760px) {
   .hs-top { gap: 12px; padding: 10px var(--gutter); }
@@ -434,6 +456,8 @@ html.lenis, html.lenis body { height: auto; }
   .hs table.index td.area { width: 36px; }
   .hs th, .hs td { padding: 7px 5px; }
   .hs table.index .hide-sm { display: none; }
+  .hs table.finder td.num .sub, .hs table.finder .chip-c i { display: none; }
+  .hs table.finder td.name a { font-size: 15px; }
   .hs-find li b { min-width: 58px; }
   .hs-coupon { padding: 22px 20px 18px; }
 }
