@@ -9,6 +9,7 @@ import ReachCards, { ReachRow } from "@/components/hunt/ReachCards";
 import { DEER_AREAS, DEER_REGIONS, deerPath, herdNames, regionPath } from "@/lib/deer";
 import { ELK_AREAS, ELK_YEAR, elkLicenses, elkPath } from "@/lib/elk";
 import { areaFeature, collection, marker } from "@/lib/hunts";
+import { HARVEST_SEASON } from "@/lib/harvest";
 import { AreaOdds, oddsOf, sureFrom } from "@/lib/license";
 import { website } from "@/lib/seo";
 import { SITE_URL, WYOMING_BOUNDS } from "@/lib/site";
@@ -120,6 +121,27 @@ export default function Home() {
         </div>
 
         <ReachCards rows={reach} />
+
+        <section className="fl-band">
+          <div className="fl-wrap">
+            <div className="fl-eyebrow">Hunt finder · {ELK_YEAR} draw and {HARVEST_SEASON} harvest</div>
+            <h2 className="fl-display fl-reveal">
+              Draw the tag. <em>Fill it.</em>
+            </h2>
+            <p className="fl-sub">
+              Every elk and deer license ranked for your own points: your chance to draw it, the share of its hunters
+              who took an animal last season, and the two together.
+            </p>
+            <div className="fl-ctas">
+              <a className="fl-btn" href="/hunting/elk/finder">
+                Find an elk hunt
+              </a>
+              <a className="fl-btn ghost" href="/hunting/deer/finder">
+                Find a deer hunt
+              </a>
+            </div>
+          </div>
+        </section>
 
         <section className="fl-band" id="find">
           <div className="fl-wrap">

@@ -7,12 +7,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: SITE_URL, changeFrequency: "monthly", priority: 1 },
     { url: `${SITE_URL}/hunting/elk`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE_URL}/hunting/elk/finder`, changeFrequency: "monthly", priority: 0.8 },
     ...ELK_AREAS.map((a) => ({
       url: `${SITE_URL}${elkPath(a)}`,
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
     { url: `${SITE_URL}/hunting/deer`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE_URL}/hunting/deer/finder`, changeFrequency: "monthly", priority: 0.8 },
     ...DEER_REGIONS.map((r) => ({
       url: `${SITE_URL}${regionPath(r.region)}`,
       changeFrequency: "monthly" as const,

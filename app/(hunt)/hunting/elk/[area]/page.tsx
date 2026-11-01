@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import AreaHero from "@/components/hunt/AreaHero";
 import DrawBoard from "@/components/hunt/DrawBoard";
+import { HarvestNote, HarvestTable, harvestLead } from "@/components/hunt/HarvestTable";
 import HuntMap from "@/components/hunt/HuntMap";
 import SeasonTable from "@/components/hunt/SeasonTable";
 import { Around, Outfitters } from "@/components/hunt/Sheet";
@@ -30,6 +31,7 @@ import {
   seasonDates,
   sentences,
 } from "@/lib/hunts";
+import { ELK_HARVEST_SOURCE, HARVEST_REPORTS, HARVEST_SEASON, elkAreaHarvest, successSentence } from "@/lib/harvest";
 import { AreaOdds, oddsOf } from "@/lib/license";
 import { SITE_URL } from "@/lib/site";
 
@@ -75,9 +77,11 @@ export function generateMetadata({ params }: { params: { area: string } }): Meta
   if (!a) return {};
   const url = `${SITE_URL}${elkPath(a)}`;
   const title = `Wyoming Elk Area ${a.area} (${a.name}): ${ELK_YEAR} draw odds, seasons and map`;
+  const harvest = elkAreaHarvest(a.area);
+  const success = harvest && harvest.total.hunters > 0 ? ` ${successSentence(harvest.total, "an elk")}` : "";
   const description = a.closed
     ? `${headline(a)} The area boundary on a map, and its legal description.`
-    : `${headline(a)} Season dates and every license type for Elk Hunt Area ${a.area}, the ${a.herdName} herd, with preference-point odds and the area boundary on a map.`;
+    : `${headline(a)}${success} Season dates and every license type for Elk Hunt Area ${a.area}, the ${a.herdName} herd, with preference-point odds, hunter success and the area boundary on a map.`;
   return {
     title: { absolute: title },
     description,
@@ -120,6 +124,13 @@ export default function ElkAreaPage({ params }: { params: { area: string } }) {
   const shown = [a, ...near];
   const licenses = a.closed ? [] : elkLicenses(a);
   const region = regionDraws(a);
+  const harvest = elkAreaHarvest(a.area);
+  const describe = (t: string) => {
+    if (t === "GEN") return "General season";
+    if (t === "Other") return "Licenses for other areas";
+    const h = a.hunts.find((x) => x.type === t);
+    return h ? `Type ${t} · ${h.description}` : `Type ${t}`;
+  };
 
   return (
     <>
@@ -167,6 +178,17 @@ export default function ElkAreaPage({ params }: { params: { area: string } }) {
             }
           />
         </section>
+
+        {harvest && harvest.total.hunters > 0 && (
+          <section className="hs-sec" id="success">
+            <div className="sh">
+              <h2>How hunters did in {HARVEST_SEASON}</h2>
+              <p>{harvestLead(harvest, "an elk")}</p>
+            </div>
+            <HarvestTable h={harvest} describe={describe} />
+            <HarvestNote source={ELK_HARVEST_SOURCE} reports={HARVEST_REPORTS} />
+          </section>
+        )}
 
         <section className="hs-sec" id="details">
           <div className="sh">

@@ -18,9 +18,20 @@ export default function HuntHeader({ siteName }: { siteName: string }) {
     window.addEventListener("scroll", on, { passive: true });
     return () => window.removeEventListener("scroll", on);
   }, []);
+  const finder = path?.endsWith("/finder") ?? false;
   const nav = [
-    { href: "/hunting/elk", label: "Elk" },
-    { href: "/hunting/deer", label: "Deer" },
+    { href: "/hunting/elk", label: "Elk", on: !finder && path?.startsWith("/hunting/elk") },
+    { href: "/hunting/deer", label: "Deer", on: !finder && path?.startsWith("/hunting/deer") },
+    {
+      href: `/hunting/${species}/finder`,
+      label: (
+        <>
+          <span className="wide-only">Hunt finder</span>
+          <span className="narrow-only">Finder</span>
+        </>
+      ),
+      on: finder,
+    },
   ];
 
   return (
@@ -35,7 +46,7 @@ export default function HuntHeader({ siteName }: { siteName: string }) {
       </a>
       <nav className="hs-nav" aria-label="Hunting">
         {nav.map((n) => (
-          <a key={n.href} href={n.href} className={path?.startsWith(n.href) ? "on" : ""}>
+          <a key={n.href} href={n.href} className={n.on ? "on" : ""}>
             {n.label}
           </a>
         ))}

@@ -67,7 +67,9 @@ export default function ElkIndex() {
             </h1>
             <p className="answer">
               Every elk hunt area in Wyoming, shaded by your chance at its main license in the {ELK_YEAR} draw.
-              Set your elk points at the top and the map and table answer for you. Click an area for its sheet.
+              Set your elk points at the top and the map and table answer for you. Click an area for its sheet,
+              or open the <a href="/hunting/elk/finder">hunt finder</a> to rank every license by your chance and
+              last season&apos;s hunter success.
             </p>
           </div>
         </div>

@@ -95,7 +95,8 @@ export default function DeerIndex() {
             <p className="answer">
               Most Wyoming deer areas open on a general license, which nonresidents draw by region. The map shades
               each area by your chance at the license that gets you in, in the {DEER_YEAR} draw. Set your deer
-              points at the top.
+              points at the top, or open the <a href="/hunting/deer/finder">hunt finder</a> to rank every license
+              by your chance and last season&apos;s hunter success.
             </p>
           </div>
         </div>
