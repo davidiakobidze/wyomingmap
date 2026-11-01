@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import JsonLd from "@/components/JsonLd";
 import AreaFinder, { FinderEntry } from "@/components/hunt/AreaFinder";
 import DawnHero from "@/components/hunt/DawnHero";
 import HeroOdds from "@/components/hunt/HeroOdds";
@@ -9,14 +10,17 @@ import ReachCards, { ReachRow } from "@/components/hunt/ReachCards";
 import { DEER_AREAS, DEER_REGIONS, deerPath, herdNames, regionPath } from "@/lib/deer";
 import { ELK_AREAS, ELK_YEAR, elkLicenses, elkPath } from "@/lib/elk";
 import { areaFeature, collection, marker } from "@/lib/hunts";
+import { HARVEST_SEASON } from "@/lib/harvest";
 import { AreaOdds, oddsOf, sureFrom } from "@/lib/license";
-import { SITE_NAME, SITE_URL, WYOMING_BOUNDS } from "@/lib/site";
+import { website } from "@/lib/seo";
+import { SITE_URL, WYOMING_BOUNDS } from "@/lib/site";
 
-const title = `Wyoming elk and deer draw odds by hunt area, ${ELK_YEAR}`;
-const description = `Every Wyoming elk and deer hunt area: the preference points nonresidents needed in the ${ELK_YEAR} draw and your own chance at the points you hold, from Wyoming Game and Fish's draw reports.`;
+// The words people search for lead: "Wyoming hunting map", then what the map holds.
+const title = `Wyoming Hunting Map · Elk and Deer Hunt Areas and Draw Odds, ${ELK_YEAR}`;
+const description = `The Wyoming hunting map for elk and deer: all ${ELK_AREAS.length} elk and ${DEER_AREAS.length} deer hunt areas, their seasons, the preference points nonresidents needed in the ${ELK_YEAR} draw and your own chance at the points you hold, from Wyoming Game and Fish's reports.`;
 
 export const metadata: Metadata = {
-  title: { absolute: `${title} · ${SITE_NAME}` },
+  title: { absolute: title },
   description,
   alternates: { canonical: SITE_URL },
   openGraph: { title, description, url: SITE_URL },
@@ -75,6 +79,7 @@ export default function Home() {
 
   return (
     <>
+      <JsonLd data={website} />
       <DawnHero
         focus={collection([areaFeature(show)])}
         bbox={show.bbox}
@@ -84,10 +89,10 @@ export default function Home() {
         place={show.name}
         copy={
           <>
-            <div className="fl-kicker">Wyoming elk &amp; deer draw odds</div>
-            <h1 className="fl-rise">
+            <h1 className="fl-kicker">Wyoming hunting map · elk &amp; deer draw odds</h1>
+            <p className="fl-headline fl-rise">
               Know your odds <em>before first light.</em>
-            </h1>
+            </p>
             <p className="fl-lede">
               All {ELK_AREAS.length} elk and {DEER_AREAS.length} deer hunt areas, the points that drew in {ELK_YEAR},
               and your own chance at the points you hold.
@@ -119,15 +124,36 @@ export default function Home() {
 
         <ReachCards rows={reach} />
 
+        <section className="fl-band">
+          <div className="fl-wrap">
+            <div className="fl-eyebrow">Hunt finder · {ELK_YEAR} draw and {HARVEST_SEASON} harvest</div>
+            <h2 className="fl-display fl-reveal">
+              Draw the tag. <em>Fill it.</em>
+            </h2>
+            <p className="fl-sub">
+              Every elk and deer license ranked for your own points: your chance to draw it, the share of its hunters
+              who took an animal last season, and the two together.
+            </p>
+            <div className="fl-ctas">
+              <a className="fl-btn" href="/hunting/elk/finder">
+                Find an elk hunt
+              </a>
+              <a className="fl-btn ghost" href="/hunting/deer/finder">
+                Find a deer hunt
+              </a>
+            </div>
+          </div>
+        </section>
+
         <section className="fl-band" id="find">
           <div className="fl-wrap">
-            <div className="fl-eyebrow">Every hunt area</div>
+            <div className="fl-eyebrow">The Wyoming hunt area map</div>
             <h2 className="fl-display fl-reveal">
               Find your <em>mountain.</em>
             </h2>
             <p className="fl-sub">
-              Search any elk or deer area by number, name or herd, or pick one off the map: every elk area is shaded
-              by your chance at its main license.
+              Search any elk or deer area by number, name or herd, or pick one off the map: every elk hunt area in
+              Wyoming is shaded by your chance at its main license.
             </p>
             <AreaFinder entries={entries} />
             <HuntMap
@@ -182,6 +208,28 @@ export default function Home() {
                 <p>
                   Residents don&apos;t use points for elk or deer: their licenses are drawn at random. Most deer areas
                   also have a general season residents can hunt over the counter.
+                </p>
+              </div>
+              <div>
+                <h3>When to apply</h3>
+                <p>
+                  Applications open in early January. Nonresident elk closes around the start of February; deer,
+                  antelope and resident elk close June 1. Wyoming Game and Fish posts{" "}
+                  <a href="https://wgfd.wyo.gov/licenses-applications/application-dates-deadlines">each year&apos;s dates</a>.
+                </p>
+              </div>
+              <div>
+                <h3>General or drawn</h3>
+                <p>
+                  Many areas have a general season. Residents buy that license over the counter; nonresidents draw a
+                  region general license (elk: Eastern, Southern or Western; deer: lettered regions) that covers them.
+                </p>
+              </div>
+              <div>
+                <h3>Hunt areas</h3>
+                <p>
+                  Every limited-quota license is good in one hunt area, or a few, for one season. Each area here has
+                  its own page: seasons, legal animals, the points that drew and its legal boundary.
                 </p>
               </div>
             </div>
