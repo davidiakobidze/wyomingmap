@@ -46,6 +46,7 @@ import {
   deerRegionHarvest,
 } from "@/lib/harvest";
 import { AreaOdds, oddsOf } from "@/lib/license";
+import { outfittersIn } from "@/lib/outfitters";
 import { SITE_URL } from "@/lib/site";
 
 export const dynamicParams = false;
@@ -313,7 +314,13 @@ function AreaPage({ a }: { a: DeerArea }) {
         </section>
 
         <Around a={a} near={near} href={deerPath} species="deer" />
-        {!a.closed && <Outfitters where={`Area ${a.area}`} subject={`Outfitter listing: Deer Area ${a.area}`} />}
+        {!a.closed && (
+          <Outfitters
+            where={`Area ${a.area}`}
+            subject={`Outfitter listing: Deer Area ${a.area}`}
+            listed={outfittersIn("deer", [a.area])}
+          />
+        )}
         <HowToRead />
       </main>
     </>
@@ -429,7 +436,14 @@ function RegionPage({ r }: { r: DeerRegion }) {
           </div>
         </section>
 
-        <Outfitters where={`Region ${r.region}`} subject={`Outfitter listing: Deer Region ${r.region}`} />
+        <Outfitters
+          where={`Region ${r.region}`}
+          subject={`Outfitter listing: Deer Region ${r.region}`}
+          listed={outfittersIn(
+            "deer",
+            r.areas.map((x) => x.area)
+          )}
+        />
 
         <section className="hs-sec">
           <div className="sh">

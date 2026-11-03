@@ -1,6 +1,7 @@
 import JsonLd from "@/components/JsonLd";
 import { CONTACT_EMAIL } from "@/lib/site";
 import { MapArea, labelPoint } from "@/lib/hunts";
+import type { OutfitterListing } from "@/lib/outfitters";
 import { breadcrumbs } from "@/lib/seo";
 
 // Server-rendered pieces of a hunt sheet: the collar along the top edge, the
@@ -118,22 +119,60 @@ export function Around<T extends MapArea>({
   );
 }
 
-export function Outfitters({ where, subject }: { where: string; subject: string }) {
+export function Outfitters({
+  where,
+  subject,
+  listed = [],
+}: {
+  where: string;
+  subject: string;
+  listed?: OutfitterListing[];
+}) {
   const mailto = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
     "Outfitter name:\nWyoming outfitter license number:\nAreas you guide in:\nWebsite:\n"
   )}`;
   return (
-    <aside className="hs-outfit">
-      <div>
-        <div className="kicker">Outfitters licensed in {where}</div>
-        <p>
-          Hunters reading this sheet are deciding where to apply. If you guide in {where}, list your outfit here
-          with your name, a photo and a link to your site.
-        </p>
-      </div>
-      <a className="hs-btn dark" href={mailto}>
-        Get listed
-      </a>
-    </aside>
+    <section className="hs-outfitters" id="outfitters">
+      {listed.length > 0 && (
+        <>
+          <div className="sh">
+            <h2>Outfitters licensed in {where}</h2>
+            <p>
+              Licensed Wyoming outfitters who guide here and asked to be listed. A listing is not an endorsement;
+              check any outfitter&apos;s license with the{" "}
+              <a href="https://outfitters.wyo.gov/outfitters">State Board of Outfitters</a> before you book.
+            </p>
+          </div>
+          <ul className="hs-outfit-list">
+            {listed.map((o) => (
+              <li key={o.license}>
+                {o.photo && <img src={o.photo} alt="" loading="lazy" width={96} height={96} />}
+                <div>
+                  <a href={o.url} rel="sponsored noopener" target="_blank">
+                    {o.business}
+                  </a>
+                  <div className="sub">
+                    {o.name} · {o.town} · license {o.license}
+                  </div>
+                  <p>{o.blurb}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      <aside className="hs-outfit">
+        <div>
+          <div className="kicker">{listed.length ? `Guide in ${where}?` : `Outfitters licensed in ${where}`}</div>
+          <p>
+            Hunters reading this sheet are deciding where to apply. If you guide in {where}, list your outfit here
+            with your name, a photo and a link to your site.
+          </p>
+        </div>
+        <a className="hs-btn dark" href={mailto}>
+          Get listed
+        </a>
+      </aside>
+    </section>
   );
 }
