@@ -366,6 +366,13 @@ html.lenis, html.lenis body { height: auto; }
 }
 .hs-outfit p { margin: 6px 0 0; max-width: 640px; font: 300 19px/1.45 var(--serif); color: var(--snow-2); }
 .hs-outfit .kicker { margin: 0; }
+.hs-outfit-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px 28px; }
+.hs-outfit-list li { display: flex; gap: 16px; padding: 18px 0; border-top: 1px solid var(--line); }
+.hs-outfit-list img { width: 96px; height: 96px; object-fit: cover; border-radius: 14px; flex: none; }
+.hs-outfit-list a { font: 400 21px var(--serif); text-decoration: none; }
+.hs-outfit-list p { margin: 6px 0 0; font-size: 14.5px; color: var(--snow-2); }
+.hs-outfitters:has(.sh) { margin-top: 72px; }
+.hs-outfitters .sh ~ .hs-outfit { margin-top: 28px; }
 
 /* Harvest: how hunters did the season before */
 .hs-harvests { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 12px 36px; }

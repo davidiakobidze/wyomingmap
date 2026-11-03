@@ -83,6 +83,16 @@ python3 -I scripts/hunts/build_harvest_data.py deer /tmp/wgfd
 The reports come out in February for the season just hunted; update `SEASON` and the media
 ids in the script.
 
+### Outfitter listings
+
+`data/outfitter-listings.json` lists the outfitters shown on area and deer region pages,
+entered by hand from their replies. Each entry has the outfitter's license number (check it
+against the State Board of Outfitters' directory), business, name, town, a one-line blurb,
+a link, an optional photo under `public/outfitters/`, the `elk` and `deer` areas it is
+licensed in, and `until`, the date the listing runs to. Pages are built at deploy time, so
+an expired listing drops off at the next deploy. The shape is `OutfitterListing` in
+`lib/outfitters.ts`.
+
 Photos are not in yet. When they are, they need to be sourced and licensed, not scraped.
 
 ## Live layers
