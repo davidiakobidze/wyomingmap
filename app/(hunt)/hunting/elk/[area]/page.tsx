@@ -33,6 +33,7 @@ import {
 } from "@/lib/hunts";
 import { ELK_HARVEST_SOURCE, HARVEST_REPORTS, HARVEST_SEASON, elkAreaHarvest, successSentence } from "@/lib/harvest";
 import { AreaOdds, oddsOf } from "@/lib/license";
+import { outfittersIn } from "@/lib/outfitters";
 import { SITE_URL } from "@/lib/site";
 
 export const dynamicParams = false;
@@ -236,7 +237,13 @@ export default function ElkAreaPage({ params }: { params: { area: string } }) {
         </section>
 
         <Around a={a} near={near} href={elkPath} species="elk" />
-        {!a.closed && <Outfitters where={`Area ${a.area}`} subject={`Outfitter listing: Elk Area ${a.area}`} />}
+        {!a.closed && (
+          <Outfitters
+            where={`Area ${a.area}`}
+            subject={`Outfitter listing: Elk Area ${a.area}`}
+            listed={outfittersIn("elk", [a.area])}
+          />
+        )}
 
         <section className="hs-sec hs-read">
           <div className="sh">
