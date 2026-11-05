@@ -5,7 +5,7 @@ import DrawBoard from "@/components/hunt/DrawBoard";
 import { HarvestNote, HarvestTable, harvestLead } from "@/components/hunt/HarvestTable";
 import HuntMap from "@/components/hunt/HuntMap";
 import SeasonTable from "@/components/hunt/SeasonTable";
-import { Around, Outfitters } from "@/components/hunt/Sheet";
+import { Alerts, Around, Outfitters } from "@/components/hunt/Sheet";
 import { Demand, NonresidentDraws, OddsAssumptions } from "@/components/HuntDraws";
 import {
   ELK_AREAS,
@@ -180,6 +180,7 @@ export default function ElkAreaPage({ params }: { params: { area: string } }) {
           />
         </section>
 
+        <Alerts where={`Elk Area ${a.area}`} />
         {harvest && harvest.total.hunters > 0 && (
           <section className="hs-sec" id="success">
             <div className="sh">

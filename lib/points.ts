@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { trackSettled } from "./track";
 
 // The hunter's own preference points, one count per species (Wyoming keeps
 // elk and deer points separately). Kept in this browser only, so the odds on
@@ -31,6 +32,7 @@ export function setPoints(s: Species, n: number) {
     // Not persisted; the count still holds for this page view.
   }
   listeners.forEach((l) => l());
+  trackSettled("points_set", s, { species: s, points: v });
 }
 
 function subscribe(l: () => void) {
@@ -55,6 +57,21 @@ export function usePoints(s: Species): number {
     () => (cache[s] ??= read(s)),
     () => 0
   );
+}
+
+// Points saved by an earlier visit: the reader came back. Once per browser
+// session, so a returning reader who opens ten sheets counts once.
+export function savedPoints(): { species: Species; points: number } | null {
+  try {
+    if (window.sessionStorage.getItem("wyomingmap.seen")) return null;
+    window.sessionStorage.setItem("wyomingmap.seen", "1");
+    for (const s of ["elk", "deer"] as Species[]) {
+      if (window.localStorage.getItem(key(s)) !== null) return { species: s, points: read(s) };
+    }
+  } catch {
+    // Storage blocked: no way to tell, so count nothing.
+  }
+  return null;
 }
 
 export const speciesOf = (path: string | null): Species => (path?.startsWith("/hunting/deer") ? "deer" : "elk");

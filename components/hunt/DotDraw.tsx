@@ -5,6 +5,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { chanceAt, chanceBig, combinedOdds, firstChoiceChance, pointsKey, pointsValue } from "@/lib/hunts";
 import { License, demandOf } from "@/lib/license";
+import { track } from "@/lib/track";
 
 const num = new Intl.NumberFormat("en-US");
 const plural = (n: number, w: string) => `${num.format(n)} ${w}${n === 1 ? "" : "s"}`;
@@ -243,7 +244,14 @@ export default function DotDraw({
         </div>
         <div className="fl-draw-run">
           {model.randomTags > 0 || model.points ? (
-            <button type="button" className="fl-btn" onClick={run}>
+            <button
+              type="button"
+              className="fl-btn"
+              onClick={() => {
+                track("draw_run", { where, license: l.id });
+                run();
+              }}
+            >
               Run the draw
             </button>
           ) : null}

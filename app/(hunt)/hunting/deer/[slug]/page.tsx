@@ -5,7 +5,7 @@ import DrawBoard from "@/components/hunt/DrawBoard";
 import { HarvestNote, HarvestTable, RegionHarvestTable, harvestLead } from "@/components/hunt/HarvestTable";
 import HuntMap from "@/components/hunt/HuntMap";
 import SeasonTable from "@/components/hunt/SeasonTable";
-import { Around, Outfitters } from "@/components/hunt/Sheet";
+import { Alerts, Around, Outfitters } from "@/components/hunt/Sheet";
 import { Demand, NonresidentDraws, OddsAssumptions } from "@/components/HuntDraws";
 import {
   DEER_REGIONS,
@@ -252,6 +252,7 @@ function AreaPage({ a }: { a: DeerArea }) {
           />
         </section>
 
+        <Alerts where={`Deer Area ${a.area}`} />
         {tables.length > 0 && (
           <section className="hs-sec" id="success">
             <div className="sh">
@@ -377,6 +378,8 @@ function RegionPage({ r }: { r: DeerRegion }) {
             }
           />
         </section>
+
+        <Alerts where={`Deer Region ${r.region}`} />
 
         <section className="hs-sec" id="details">
           <div className="sh">

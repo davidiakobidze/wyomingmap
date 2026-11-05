@@ -1,5 +1,7 @@
 import JsonLd from "@/components/JsonLd";
 import { CONTACT_EMAIL } from "@/lib/site";
+import AlertForm from "./AlertForm";
+import OutfitterLink from "./OutfitterLink";
 import { MapArea, labelPoint } from "@/lib/hunts";
 import type { OutfitterListing } from "@/lib/outfitters";
 import { breadcrumbs } from "@/lib/seo";
@@ -170,10 +172,15 @@ export function Outfitters({
             a link to your site for {LISTING_PRICE}. We check your Wyoming outfitter license first.
           </p>
         </div>
-        <a className="hs-btn dark" href={mailto}>
-          Get listed
-        </a>
+        <OutfitterLink href={mailto} where={where} />
       </aside>
     </section>
   );
+}
+
+// The deadline and results-day signup. It shows only once the email service
+// is connected, so the live site never offers a form that can't deliver.
+export function Alerts({ where }: { where: string }) {
+  if (!process.env.RESEND_API_KEY || !process.env.RESEND_SEGMENT_ID) return null;
+  return <AlertForm where={where} />;
 }

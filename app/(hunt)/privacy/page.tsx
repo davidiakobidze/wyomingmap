@@ -74,8 +74,8 @@ export default function PrivacyPage() {
             <b>Running a draw:</b> the page you ran it on and the license.
           </li>
           <li>
-            <b>Searching the area finder:</b> <b>the first 60 characters of what you type</b> and the result you picked. Please
-            search for places and hunt areas, and don&apos;t type personal details into this box.
+            <b>Searching the area finder:</b> the result you picked, or that nothing matched. What you type isn&apos;t
+            sent.
           </li>
           <li>
             <b>Signing up for alerts:</b> the page you signed up on. Your email address isn&apos;t included.
