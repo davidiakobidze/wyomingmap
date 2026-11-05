@@ -25,5 +25,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
+    ...["about", "contact", "privacy", "terms"].map((p) => ({
+      url: `${SITE_URL}/${p}`,
+      changeFrequency: "yearly" as const,
+      priority: 0.3,
+    })),
   ];
 }

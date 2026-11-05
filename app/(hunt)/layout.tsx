@@ -30,7 +30,11 @@ export default function HuntingLayout({ children }: { children: React.ReactNode 
         </span>
         <span>
           <a href="/hunting/elk">Elk areas</a> · <a href="/hunting/deer">Deer areas</a> ·{" "}
-          <a href="/hunting/elk/finder">Hunt finder</a>
+          <a href="/hunting/elk/finder">Elk finder</a> · <a href="/hunting/deer/finder">Deer finder</a>
+        </span>
+        <span>
+          <a href="/about">About</a> · <a href="/contact">Contact</a> · <a href="/privacy">Privacy</a> ·{" "}
+          <a href="/terms">Terms</a>
         </span>
       </footer>
       <Motion />
