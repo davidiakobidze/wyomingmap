@@ -84,7 +84,7 @@ export default function Home() {
         bbox={show.bbox}
         start="state"
         contextUrl="/data/elk-hunt-areas.geojson"
-        length={420}
+        length={260}
         place={show.name}
         copy={
           <>
@@ -107,7 +107,15 @@ export default function Home() {
             </p>
           </>
         }
-        card={<HeroOdds l={showLicense} species="elk" href="#draw" cta="Watch the draw" />}
+        card={
+          <HeroOdds
+            l={showLicense}
+            species="elk"
+            href="#draw"
+            cta="Watch the draw"
+            where={`Area ${show.area} ${show.name}`}
+          />
+        }
       />
 
       <main>

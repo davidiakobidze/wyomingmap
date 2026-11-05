@@ -6,8 +6,21 @@ import { Species, usePoints } from "@/lib/points";
 
 const num = new Intl.NumberFormat("en-US");
 
-// The card the hero lands on: one license, the hunter's own chance at it.
-export default function HeroOdds({ l, species, href, cta }: { l: License; species: Species; href: string; cta: string }) {
+// The hero's card: one license, the hunter's own chance at it. `where` names the
+// area on pages that aren't already about it, so the number never stands alone.
+export default function HeroOdds({
+  l,
+  species,
+  href,
+  cta,
+  where,
+}: {
+  l: License;
+  species: Species;
+  href: string;
+  cta: string;
+  where?: string;
+}) {
   const pts = usePoints(species);
   let big: string, with_: string, tags: number, applied: number, who: string;
   if (l.points) {
@@ -32,6 +45,7 @@ export default function HeroOdds({ l, species, href, cta }: { l: License; specie
   return (
     <>
       <div className="k">
+        {where && `${where} · `}
         {l.kicker} · {l.title} · {who.toLowerCase()}
       </div>
       <div className="big" aria-live="polite">

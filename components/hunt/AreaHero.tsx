@@ -6,10 +6,10 @@ import DawnHero from "./DawnHero";
 import HeroOdds from "./HeroOdds";
 import { Crumbs } from "./Sheet";
 
-// The top of an area or region sheet: dawn comes up over the place, its
-// outline draws itself and the card lands on the reader's chance at its first
-// license. The name and the plain-words answer are in the opening frame, so
-// they are what a search engine and a reader with no script both get.
+// The top of an area or region sheet: dawn comes up over the place and its
+// outline draws itself, beside a card with the reader's chance at its first
+// license. The name, the plain-words answer and the card are in the opening
+// frame, so they are what a search engine and a reader with no script both get.
 export default function AreaHero({
   species,
   focus,
@@ -41,7 +41,7 @@ export default function AreaHero({
       bbox={bbox}
       start="near"
       contextUrl={`/data/${species}-hunt-areas.geojson`}
-      length={240}
+      length={170}
       place={name}
       copy={
         <>
