@@ -1,16 +1,23 @@
 # Wyoming Map
 
-A curated map of Wyoming for visitors. One screen: the national parks, the scenic drives
-worth the detour, the spots to stand for the photo, and what is burning right now.
+Wyoming elk and deer draw odds by hunt area, at your own preference points. Live at
+[wyomingmap.com](https://wyomingmap.com).
 
-The previous product in this repo (an energy and data-center project tracker) was removed;
-its history is at commit `46544a9` on `main`.
+Every hunt area has a page with its map, the points nonresidents needed, your own odds in
+the draw, season dates, what each license allows and how hunters did there. The hunt
+finder ranks every license by your chance of drawing it and filling it. A hunter's points
+are kept in their browser, so there are no accounts.
+
+The earlier products in this repo, an energy and data-center tracker and a visitor map,
+were removed. Their history is in git.
 
 ## Stack
 
-- Next.js 14, React 18, TypeScript
-- MapLibre GL with OpenFreeMap tiles (no API key)
-- Curated places in `data/places.json`, typed in `lib/places.ts`
+- Next.js 14 (App Router), React 18, TypeScript; every page is prerendered at build time
+- MapLibre GL with OpenFreeMap tiles and AWS Terrain Tiles (no API key)
+- GSAP for the hero and the animated draw
+- Vercel for hosting and Web Analytics
+- Python scripts that turn Wyoming Game and Fish (WGFD) PDFs into the JSON in `data/`
 
 ## Develop
 
@@ -19,42 +26,37 @@ npm install
 npm run dev
 ```
 
+Check a change with `npm run build`. There is no test suite.
+
+## Pages
+
+All pages live in the `app/(hunt)/` route group and share its layout, masthead and footer.
+
+| route | what it is | data |
+|---|---|---|
+| `/` | The statewide map and the draw, for your points | both species |
+| `/hunting/elk`, `/hunting/elk/area-N` | Elk index and area pages | `data/elk-hunt-areas.json` |
+| `/hunting/deer`, `/hunting/deer/area-N`, `/hunting/deer/region-x` | Deer index, area and nonresident region pages | `data/deer-hunt-areas.json` |
+| `/hunting/elk/finder`, `/hunting/deer/finder` | Hunt finder: every license by draw chance times success | hunt and harvest data |
+| `/about`, `/contact`, `/privacy`, `/terms` | Trust pages, styled by `app/(hunt)/info.css` | none |
+| `/sitemap.xml`, `/robots.txt` | Generated in `app/sitemap.ts` and `app/robots.ts` | area lists |
+
+Add new static pages to `app/sitemap.ts` and, if they matter to readers, to the footer in
+`app/(hunt)/layout.tsx`.
+
 ## Data
 
-Each place in `data/places.json` has:
+### Hunt areas
 
-| field | notes |
-|---|---|
-| `slug` | stable id, used for the marker and (later) URLs |
-| `name` | display name |
-| `category` | `park`, `scenic-drive`, or `photo-spot` |
-| `region` | short grouping label shown under the name |
-| `lat`, `lng` | approximate; scenic drives use a representative point (a pass or overlook) |
-| `summary` | one to three sentences, factual, written for a visitor |
-| `season` | optional; closures and timing that change a trip |
-| `link` | optional; official NPS page or Wikipedia |
+`data/<species>-hunt-areas.json` holds each area's draw results, season dates, what each
+license allows and boundary description. They come from WGFD's published draw reports,
+its season regulation (Chapter 6 for deer, Chapter 7 for elk) and its ArcGIS hunt-area
+layers. `public/data/<species>-hunt-areas.geojson` holds the boundaries alone, for the
+statewide map.
 
-### Hunt areas (elk, deer)
-
-One page per hunt area, built from Wyoming Game and Fish's published draw reports and
-its ArcGIS hunt-area layers:
-
-| route | data |
-|---|---|
-| `/hunting/elk`, `/hunting/elk/area-N` | `data/elk-hunt-areas.json` |
-| `/hunting/deer`, `/hunting/deer/area-N`, `/hunting/deer/region-x` | `data/deer-hunt-areas.json` |
-
-`public/data/<species>-hunt-areas.geojson` holds the boundaries alone, for the statewide
-map. Both species carry season dates, what each license allows and boundary descriptions
-from the WGFD season regulation (Chapter 6 for deer, Chapter 7 for elk). The 17 deer
-nonresident general-license regions get their own pages, since nonresidents draw deer by
-region rather than by area; elk areas with a general season show their region's general
-license (Eastern, Southern or Western) on the area page.
-
-Every area and region page has a share card (`opengraph-image.tsx` beside the page, drawn
-by `lib/og.tsx`), built at deploy time from the same data. The fonts in `lib/og/` are
-static Fraunces and Geist instances (OFL) from Fontsource, because the image renderer
-can't read variable fonts or woff2.
+The 17 deer nonresident general-license regions get their own pages, since nonresidents
+draw deer by region rather than by area. Elk areas with a general season show their
+region's general license (Eastern, Southern or Western) on the area page.
 
 ```bash
 python3 -I scripts/hunts/build_hunt_data.py elk /tmp/wgfd
@@ -62,7 +64,7 @@ python3 -I scripts/hunts/build_hunt_data.py deer /tmp/wgfd
 ```
 
 Needs `pdftotext` (poppler). WGFD posts new reports every year (nonresident in May,
-resident in June) and a new season regulation, each under new media ids; update `YEAR`
+resident in June) and a new season regulation, each under new media ids. Update `YEAR`
 and the ids in `SPECIES` in the script, rerun, check that the printed hunt counts match
 the reports, and read any warnings (a season row the parser could not place, an area with
 no boundary description).
@@ -72,15 +74,14 @@ no boundary description).
 `data/<species>-harvest.json` holds hunter success and days per animal for every hunt
 area, license type and nonresident general region, from WGFD's annual harvest reports
 (the deer report keeps mule deer and white-tailed deer apart). Area pages show it beside
-the draw, and the hunt finder (`/hunting/elk/finder`, `/hunting/deer/finder`) ranks every
-license by draw chance times success.
+the draw, and the hunt finder uses it for its ranking.
 
 ```bash
 python3 -I scripts/hunts/build_harvest_data.py elk /tmp/wgfd
 python3 -I scripts/hunts/build_harvest_data.py deer /tmp/wgfd
 ```
 
-The reports come out in February for the season just hunted; update `SEASON` and the media
+The reports come out in February for the season just hunted. Update `SEASON` and the media
 ids in the script.
 
 ### Outfitter listings
@@ -95,60 +96,21 @@ an expired listing drops off at the next deploy. The shape is `OutfitterListing`
 
 Photos are not in yet. When they are, they need to be sourced and licensed, not scraped.
 
-## Live layers
+## Share cards and icons
 
-Live feeds are fetched server-side, normalized to GeoJSON, and served from `app/api/live/*`.
-The client never talks to an upstream API directly, so a feed can change or go down without
-touching the map code. Every feed responds `{ ok: false, error }` (HTTP 200, uncached) when
-upstream fails; the UI shows it as unavailable and everything else keeps working.
+Every area and region page has a share card (`opengraph-image.tsx` beside the page, drawn
+by `lib/og.tsx`), built at deploy time from the same data. The fonts in `lib/og/` are
+static Fraunces and Geist instances (OFL) from Fontsource, because the image renderer
+can't read variable fonts or woff2.
 
-| route | source | refresh | notes |
-|---|---|---|---|
-| `/api/live/fires` | NIFC WFIGS (no key) | upstream cached 10 min, CDN 5 min | Active wildfire incidents (WF and CX; prescribed burns excluded) and published perimeters within a padded Wyoming envelope. Same service WYDOT's own 511 map uses. |
+`app/icon.svg` is the favicon. `app/favicon.ico` and `app/apple-icon.png` are rendered from
+the same drawing for older browsers and iOS home screens.
 
-To test the failure path locally, point the upstream at a dead port:
+## Before these pages are final
 
-```bash
-NIFC_BASE_URL=http://127.0.0.1:9 npm run dev
-```
-
-**Road closures (WYDOT 511) are not wired.** WYDOT's public map obfuscates its data
-endpoints at runtime, which is a clear signal the feed is not meant for third parties, and
-it would break the moment they rotate it. The right path is WYDOT's official traveler-
-information data program (request access through WYDOT). Until then the map links out to
-wyoroad.info.
-
-## Pages
-
-| route | what it is |
-|---|---|
-| `/` | The whole map, all categories. |
-| `/yellowstone`, `/grand-teton`, `/scenic-drives`, `/photo-spots`, `/wildfires` | Themed views of the same map, defined in `lib/pages.ts`: scoped places, preset categories, a starting viewport, and real intro text for search engines. Prerendered; unknown slugs 404. |
-| `/feature-your-business` | Sponsor pitch. Contact is a mailto to `CONTACT_EMAIL` in `lib/site.ts`, which is a placeholder until the real inbox exists. |
-| `/sitemap.xml`, `/robots.txt` | Generated from the page list. |
-
-`?place=<slug>` on any map page preselects that place and is kept in sync as the visitor
-clicks, so links are shareable. Fires never enter the URL.
-
-The satellite toggle swaps in free USGS orthoimagery under the labels. Analytics is
-`@vercel/analytics`, which only reports on Vercel deployments.
-
-## Components
-
-- `components/Explorer.tsx` — sidebar (live toggles, category filters, list, detail panels)
-  and the map.
-- `components/WyomingMap.tsx` — MapLibre map bounded to Wyoming, product-neutral. Renders
-  `MapPoint[]` as click-selectable markers and `MapOverlay[]` as GeoJSON fill/line layers,
-  and falls back to a message when WebGL is unavailable.
-
-## Next
-
-- Set the real contact inbox in `lib/site.ts` before going live
-- Road closures once WYDOT data access is arranged
-- Weather warnings (NWS watches/warnings feature service, public, no key)
-- Custom map style (colors and type); the satellite toggle is in
-- Photos for places, properly sourced
-- Sponsored pins: data field, marker style, and the sidebar treatment promised on the sponsor page
-- Themed landing pages for search
-- Sponsor-interest page
-- Analytics
+- `CONTACT_EMAIL` in `lib/site.ts` is marked as a placeholder. Confirm that the inbox
+  works: the contact, privacy and terms pages all show it.
+- `/privacy` and `/terms` are drafts and say so on the page. Each has a `TODO(owner)`
+  comment listing what it still needs. After review, delete the `.in-draft` note and update
+  the date.
+- If you change what the site collects, change `/privacy` to match.
