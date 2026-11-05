@@ -10,7 +10,7 @@ type Events = {
   points_set: { species: string; points: number };
   draw_run: { where: string; license: string };
   returning: { species: string; points: number };
-  finder_search: { query: string; picked: string };
+  finder_search: { picked: string }; // the result only; what a reader types stays in the browser
   email_signup: { where: string };
   outfitter_click: { where: string };
 };

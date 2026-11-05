@@ -32,7 +32,7 @@ export default function AreaFinder({ entries }: { entries: FinderEntry[] }) {
       role="search"
       onSubmit={(e) => {
         e.preventDefault();
-        track("finder_search", { query: q.trim().slice(0, 60), picked: hits[0]?.key ?? "none" });
+        track("finder_search", { picked: hits[0]?.key ?? "none" });
         if (hits[0]) window.location.href = hits[0].href;
       }}
     >
@@ -50,7 +50,7 @@ export default function AreaFinder({ entries }: { entries: FinderEntry[] }) {
           {hits.length ? (
             hits.map((h) => (
               <li key={h.key}>
-                <a href={h.href} onClick={() => track("finder_search", { query: q.trim().slice(0, 60), picked: h.key })}>
+                <a href={h.href} onClick={() => track("finder_search", { picked: h.key })}>
                   <b>
                     {h.species} {h.num}
                   </b>
