@@ -22,8 +22,9 @@ function clock(p: number): string {
 }
 
 // A pinned stage the scroll plays like a film: night over the state, the
-// camera dives to the area, the sun comes up, the area's outline draws itself
-// and the odds card arrives. One number from 0 to 1 drives all of it.
+// camera dives to the area, the sun comes up and the area's outline draws
+// itself. One number from 0 to 1 drives all of it. The odds card stays up from
+// the first frame: the film never stands between a reader and their answer.
 export default function DawnHero({
   focus,
   bbox,
@@ -64,8 +65,6 @@ export default function DawnHero({
       gsap.set(q(".fl-copy"), { autoAlpha: 1 - out, y: -60 * out });
       const tagIn = smooth(0.4, 0.55, p);
       gsap.set(q(".fl-tag"), { autoAlpha: tagIn, y: 30 * (1 - tagIn) });
-      const cardIn = smooth(0.62, 0.76, p);
-      gsap.set(q(".fl-card"), { autoAlpha: cardIn, y: 40 * (1 - cardIn) });
       const s = smooth(0.06, 0.72, p);
       gsap.set(q(".fl-sun"), { opacity: s * 0.9, yPercent: lerp(10, -45, s) });
       if (time) time.textContent = clock(p);

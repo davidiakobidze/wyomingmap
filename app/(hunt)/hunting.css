@@ -120,10 +120,9 @@ html.lenis, html.lenis body { height: auto; }
 @keyframes fl-cue { 0% { transform: scaleY(0); } 50% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
 /* Before the script takes over, and for readers who want less motion: one still frame at sunrise, words and card both showing. */
 .fl-hero.idle .fl-tag, .fl-hero.still .fl-tag { display: none; }
-.fl-hero.idle .fl-card { visibility: hidden; }
 .fl-hero.still { height: auto; }
 .fl-hero.still .fl-stage { position: relative; min-height: 100vh; }
-.fl-hero.live .fl-tag, .fl-hero.live .fl-card { visibility: hidden; }
+.fl-hero.live .fl-tag { visibility: hidden; }
 .fl-hero.nomap .fl-stage { background: linear-gradient(180deg, var(--night) 0%, #2a2240 55%, #8a4f5a 85%, #e9a36a 100%); }
 
 /* ---------- Bands and type ---------- */
@@ -439,18 +438,13 @@ html.lenis, html.lenis body { height: auto; }
   .hs-pts .long { display: none; }
   .hs-pts-label { margin-right: 2px; font-size: 10.5px; }
   .fl-veil { background: linear-gradient(0deg, rgba(10, 15, 28, 0.94) 0%, rgba(10, 15, 28, 0.45) 55%, rgba(10, 15, 28, 0.25) 100%); }
-  .fl-copy { bottom: 10vh; }
   .fl-clock { top: 66px; left: var(--gutter); right: auto; text-align: left; }
   .fl-clock b { font-size: 24px; }
   .fl-tag { top: 132px; max-width: none; right: var(--gutter); }
   .fl-tag .num { font-size: 72px; }
   .fl-tag .name { font-size: 34px; margin-top: 6px; }
-  .fl-card { bottom: 3vh; padding: 20px 22px; }
   .fl-card .big { font-size: 60px; }
   .fl-card dl { gap: 8px; }
-  .fl-hero.still .fl-stage { display: flex; flex-direction: column; justify-content: flex-end; gap: 24px; padding: 140px var(--gutter) 24px; }
-  .fl-hero.still .fl-copy, .fl-hero.still .fl-card { position: relative; inset: auto; padding: 0; }
-  .fl-hero.still .fl-card { padding: 20px 22px; width: 100%; }
   .hs .d { width: 7px; height: 7px; }
   .fl-ladder .dots { gap: 3px; }
   .fl-sheets { grid-template-columns: 1fr; }
@@ -467,6 +461,25 @@ html.lenis, html.lenis body { height: auto; }
   .hs table.finder td.name a { font-size: 15px; }
   .hs-find li b { min-width: 58px; }
   .hs-coupon { padding: 22px 20px 18px; }
+}
+@media (min-width: 961px) {
+  /* Leaves room for the odds card beside the headline. */
+  .fl-copy { max-width: min(780px, calc(100vw - 420px - 2 * var(--gutter) - 24px)); }
+}
+@media (max-width: 960px) {
+  /* The headline and the card share the screen, so they stack instead of overlapping. */
+  .fl-stage { display: flex; flex-direction: column; justify-content: flex-end; gap: 16px; padding: 60px var(--gutter) 16px; }
+  .fl-copy, .fl-card { position: relative; inset: auto; }
+  .fl-copy { padding: 0; max-width: none; }
+  .fl-card { padding: 20px 22px; width: min(420px, 100%); }
+  .fl-cue { display: none; }
+  .fl-hero.still .fl-stage { height: auto; gap: 24px; padding: 140px var(--gutter) 24px; }
+  /* Some areas' answers run past 700 characters; the card must still fit. The pinned stage can't scroll, so the still one keeps it all. */
+  .fl-hero:not(.still) .fl-lede { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; }
+}
+@media (max-width: 960px) and (max-height: 760px) {
+  .fl-hero:not(.still) .fl-clock, .fl-hero:not(.still) .fl-card dl, .fl-hero:not(.still) .fl-copy .hs-crumbs { display: none; }
+  .fl-hero:not(.still) .fl-lede { -webkit-line-clamp: 3; }
 }
 @media (min-width: 761px) and (max-width: 1100px) {
   .fl-tag { max-width: 40vw; }
