@@ -5,6 +5,7 @@ import OutfitterLink from "./OutfitterLink";
 import { MapArea, labelPoint } from "@/lib/hunts";
 import type { OutfitterListing } from "@/lib/outfitters";
 import { breadcrumbs } from "@/lib/seo";
+import { LISTING_PRICE } from "@/lib/site";
 
 // Server-rendered pieces of a hunt sheet: the collar along the top edge, the
 // adjoining-areas key, and the outfitter listing.
@@ -165,10 +166,10 @@ export function Outfitters({
       )}
       <aside className="hs-outfit">
         <div>
-          <div className="kicker">{listed.length ? `Guide in ${where}?` : `Outfitters licensed in ${where}`}</div>
+          <div className="kicker">Guide in {where}?</div>
           <p>
-            Hunters reading this sheet are deciding where to apply. If you guide in {where}, list your outfit here
-            with your name, a photo and a link to your site.
+            Hunters reading this sheet are deciding where to apply. List your outfit here with your name, a photo and
+            a link to your site for {LISTING_PRICE}. We check your Wyoming outfitter license first.
           </p>
         </div>
         <OutfitterLink href={mailto} where={where} />

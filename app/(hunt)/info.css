@@ -1,0 +1,20 @@
+/* The about, contact, privacy and terms pages: long reading on the First Light
+   ground. Colors and fonts come from the .hs tokens in hunting.css. */
+.in-page { padding-top: 64px; padding-bottom: 72px; }
+.hs .in-page h1 { font-size: clamp(42px, 5.4vw, 72px); }
+.hs .in-page .hs-head { display: block; padding-bottom: 12px; }
+
+.in-body { max-width: 720px; color: var(--snow-2); }
+.in-body h2 { font: 300 clamp(25px, 2.6vw, 32px)/1.15 var(--serif); letter-spacing: -0.015em; color: var(--snow); margin: 44px 0 12px; font-variation-settings: "SOFT" 100; }
+.in-body p { margin: 0 0 14px; }
+.in-body ul { margin: 0 0 14px; padding-left: 20px; }
+.in-body li { margin-bottom: 8px; }
+.in-body li::marker { color: var(--gold); }
+.in-body b { color: var(--snow); font-weight: 500; }
+.in-body a { overflow-wrap: anywhere; }
+
+.in-draft { max-width: 720px; box-sizing: border-box; margin: 18px 0 8px; padding: 12px 16px; border: 1px solid var(--gold); border-radius: 6px; font-size: 14px; color: var(--snow); }
+.in-draft b { color: var(--gold); font-weight: 500; }
+.in-updated { font: 12px var(--mono); letter-spacing: 0.04em; color: var(--mute); margin: 14px 0 0; }
+.in-mail { font: 300 clamp(24px, 4vw, 34px)/1.2 var(--serif); margin: 8px 0 20px !important; overflow-wrap: anywhere; }
+.in-mail a { color: var(--gold); }
